@@ -1,5 +1,25 @@
 {
   "dependencies": {
-    "discord.js": "^11.4.2"
-  }
+    "@octokit/rest": "^16.28.0",
+    "discord.js": "^11.4.2",
+    "gitlab": "^6.2.0"
+  },
+  "name": "dragonite",
+  "description": "A discord bot for reacting to messages containing certain text in certain channels, and then prompting certain users whether or not they want to repost those messages to other channels.",
+  "version": "1.0.0",
+  "main": "index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fortheusers/reposter-bot.git"
+  },
+  "author": "",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/fortheusers/reposter-bot/issues"
+  },
+  "homepage": "https://github.com/fortheusers/reposter-bot#readme"
 }
