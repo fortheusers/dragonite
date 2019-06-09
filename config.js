@@ -16,6 +16,9 @@ const config = {
 
     commandPrefix: '.',
 
+    // All verification messages get sent here
+    packageVerification: {channel: '587376644474273853', guild: '558725999584477197'},
+
     // list of get repo url's to check via the bot
     getRepos: ['http://switchbru.com/appstore/'],
     // Max attempts at requesting something before giving up

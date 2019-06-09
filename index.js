@@ -7,6 +7,7 @@ var client = new Discord.Client();
 var gitlabHelper = new GitlabHelper();
 var msgHandler = new Handlers.MessageHandler(client, gitlabHelper);
 var reactHandler = new Handlers.ReactionHandler(client);
+let endpointHandler = new Handlers.EndpointHandler(client, 457);
 
 client.on('ready', function () {
     console.log("Logged in as " + client.user.tag + "!");

@@ -1,5 +1,9 @@
 var config = require("./config.js");
 const commands = require('./commands');
+const express = require('express');
+const {discord, RichEmbed} = require('discord.js');
+
+let pendingPackages = [];
 
 const MessageHandler = class MessageHandler{
     handleCommand(msg) {
@@ -34,6 +38,88 @@ const MessageHandler = class MessageHandler{
 
 }
 
+const EndpointHandler = class EndpointHandler{
+    constructor(client, port, gitlab) {
+        this.app = express();
+        this.port = port;
+        this.app.use(express.json());
+
+        this.app.post('/', (req, res) => {
+            console.log(req.body);
+        });
+
+        this.app.post('/package', (req, res) => {
+            res.set('Access-Control-Allow-Origin', '*');
+            res.set('Access-Control-Allow-Headers', '*');
+            res.set('Access-Control-Allow-Method', '*');
+            res.flushHeaders();
+
+            console.log(req.body);
+            let reqFormat = req.body;
+            try {
+                let embed = new RichEmbed({
+                    title: 'Package submission received',
+                    color: 0x2170BF,
+                    fields: [
+                        {
+                            name: 'Package',
+                            value: reqFormat.package,
+                            inline: true
+                        },
+                        {
+                            name: 'Type',
+                            value: reqFormat.type,
+                            inline: true
+                        },
+                        {
+                            name: 'Track Github',
+                            value: reqFormat.trackGithub,
+                            inline: true
+                        }
+                    ]
+                });
+                if (reqFormat.info.title) embed.addField('Title', reqFormat.info.title, true);
+                if (reqFormat.info.author) embed.addField('Author', reqFormat.info.author, true);
+                if (reqFormat.info.description) embed.addField('Description', reqFormat.info.description, true);
+                if (reqFormat.info.category) embed.addField('Category', reqFormat.info.category, true);
+                if (reqFormat.info.license) embed.addField('License', reqFormat.info.license, true);
+                if (embed.fields.length % 3 != 0) embed.addBlankField(true);
+                if (embed.fields.length % 3 != 0) embed.addBlankField(true);
+                if (reqFormat.info.details) embed.addField('Details', reqFormat.info.details.replace(/\\n/g, '\n'));
+                if (reqFormat.assets && reqFormat.assets.length > 0) {
+                    let txt = '';
+                    for (let asset of reqFormat.assets) {
+                        if (asset.type) {
+                            switch (asset.type) {
+                                case 'icon':
+                                    if (asset.format && asset.format == 'url') embed.setThumbnail(asset.data);
+                                case 'screen':
+                                    if (asset.format && asset.format == 'url') embed.setImage(asset.data);
+                                case 'update':
+                                case 'extract':
+                                case 'local':
+                                case 'get':
+                                    if (asset.format && asset.format == 'url') txt += `${asset.type}: ${asset.data}\n`;
+                                    break;
+                                case 'zip':
+                                    if (asset.url) txt += `${asset.type}: ${asset.url}\n`;
+                                    break;
+                            }
+                        }
+                    }
+                    embed.addField('Assets', txt);
+                }
+                client.guilds.get(config.packageVerification.guild).channels.get(config.packageVerification.channel).send(embed);
+                res.status(200).end();
+            } catch (e) {
+                res.status(400).send({error: e.name, message: e.message}).end();
+                return;
+            }
+        });
+        this.app.listen(this.port, () => console.log(`Endpoint handler listening on port ${this.port}!`));
+    }
+}
+
 const ReactionHandler = class ReactionHandler {
 	constructor(client) {
 		this.client = client;
@@ -42,3 +128,4 @@ const ReactionHandler = class ReactionHandler {
 
 module.exports.MessageHandler = MessageHandler;
 module.exports.ReactionHandler = ReactionHandler;
+module.exports.EndpointHandler = EndpointHandler;
