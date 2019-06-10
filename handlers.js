@@ -3,8 +3,6 @@ const commands = require('./commands');
 const express = require('express');
 const {discord, RichEmbed} = require('discord.js');
 
-let pendingPackages = [];
-
 const MessageHandler = class MessageHandler{
     handleCommand(msg) {
         if (msg.content.startsWith(config.commandPrefix)) {
@@ -44,17 +42,11 @@ const EndpointHandler = class EndpointHandler{
         this.port = port;
         this.app.use(express.json());
 
-        this.app.post('/', (req, res) => {
-            console.log(req.body);
-        });
-
         this.app.post('/package', (req, res) => {
             res.set('Access-Control-Allow-Origin', '*');
             res.set('Access-Control-Allow-Headers', '*');
             res.set('Access-Control-Allow-Method', '*');
-            res.flushHeaders();
 
-            console.log(req.body);
             let reqFormat = req.body;
             try {
                 let embed = new RichEmbed({
@@ -109,7 +101,12 @@ const EndpointHandler = class EndpointHandler{
                     }
                     embed.addField('Assets', txt);
                 }
-                client.guilds.get(config.packageVerification.guild).channels.get(config.packageVerification.channel).send(embed);
+                client.guilds.get(config.packageVerification.guild).channels.get(config.packageVerification.channel).send(embed).then(msg => {
+                    pendingPackages.push({id: msg.id, content: reqFormat});
+                    console.log(pendingPackages);
+                    msg.react('✅');
+                    msg.react('❎');
+                });
                 res.status(200).end();
             } catch (e) {
                 res.status(400).send({error: e.name, message: e.message}).end();
@@ -121,9 +118,32 @@ const EndpointHandler = class EndpointHandler{
 }
 
 const ReactionHandler = class ReactionHandler {
-	constructor(client) {
-		this.client = client;
-	}
+    static handleReaction(reaction, user) {
+        const id = reaction.message.id;
+        console.log(reaction);
+        if (reaction.users.size == 2) {
+            const i = pendingPackages.findIndex(a => {
+                return a.id == id;
+            });
+            console.log(pendingPackages);
+            if (i != -1) {
+                if (reaction.name == '✅') {
+                    reaction.message.edit(new RichEmbed({
+                        title: 'Package submission approved',
+                        color: 0x85A352,
+                        fields: [{
+                            title: 'Package',
+                            value: pendingPackages[a].content.package
+                        }],
+                        thumbnail: 'https://github.com/google/material-design-icons/raw/master/action/drawable-xxhdpi/ic_done_white_48dp.png'
+                    }));
+                }
+                reaction.message.clearReactions();
+                pendingPackages.splice(i, 1);
+            }
+        }
+        return pendingPackages;
+    }
 }
 
 module.exports.MessageHandler = MessageHandler;
