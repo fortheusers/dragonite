@@ -8,7 +8,7 @@ const commands = {
         requiredPermissions: ['BAN_MEMBERS'],
         action: async function(msg, command) {
             let toleranceCount = 0;
-            github = new GithubHelper();
+            let github = new GithubHelper();
             config.getRepos.forEach(repo => {
                 msg.channel.send(`Checking repo: <${repo}>`);
                 http.get(repo + "repo.json", response => {

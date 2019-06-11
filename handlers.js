@@ -103,7 +103,6 @@ const EndpointHandler = class EndpointHandler{
                 }
                 client.guilds.get(config.packageVerification.guild).channels.get(config.packageVerification.channel).send(embed).then(msg => {
                     pendingPackages.push({id: msg.id, content: reqFormat});
-                    console.log(pendingPackages);
                     msg.react('✅');
                     msg.react('❎');
                 });
@@ -120,22 +119,25 @@ const EndpointHandler = class EndpointHandler{
 const ReactionHandler = class ReactionHandler {
     static handleReaction(reaction, user) {
         const id = reaction.message.id;
-        console.log(reaction);
         if (reaction.users.size == 2) {
             const i = pendingPackages.findIndex(a => {
                 return a.id == id;
             });
-            console.log(pendingPackages);
+            console.log(reaction);
             if (i != -1) {
-                if (reaction.name == '✅') {
+                if (reaction.emoji.name == '✅') {
                     reaction.message.edit(new RichEmbed({
-                        title: 'Package submission approved',
+                        title: pendingPackages[i].content.package,
                         color: 0x85A352,
-                        fields: [{
-                            title: 'Package',
-                            value: pendingPackages[a].content.package
-                        }],
-                        thumbnail: 'https://github.com/google/material-design-icons/raw/master/action/drawable-xxhdpi/ic_done_white_48dp.png'
+                        footer: {text: 'Package submission approved', iconURL: 'https://github.com/google/material-design-icons/raw/master/action/drawable-xxhdpi/ic_done_white_48dp.png'},
+                        url: pendingPackages[i].content.package.url
+                    }));
+                } else if (reaction.emoji.name == '❎') {
+                    reaction.message.edit(new RichEmbed({
+                        title: pendingPackages[i].content.package,
+                        color: 0xC73228,
+                        footer: {text: 'Package submission denied'},
+                        url: pendingPackages[i].content.package.url
                     }));
                 }
                 reaction.message.clearReactions();
