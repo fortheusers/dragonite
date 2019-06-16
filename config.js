@@ -1,6 +1,6 @@
 const config = {
     // your bot's token from the bot creation page
-	token: '',
+	token: '', // it's a secret to everyone
 
     commandPrefix: '.',
 
@@ -9,6 +9,7 @@ const config = {
 
     // list of get repo url's to check via the bot
     getRepos: ['http://switchbru.com/appstore/'],
+    
     // Max attempts at requesting something before giving up
     toleranceMax: 3,
 
@@ -23,6 +24,13 @@ const config = {
         initOptions: {
             auth: ''
         }
+    },
+
+    ssh: {
+        user: '',
+        server: '',
+        keyPath: '',
+        keyPass: '' // TODO: prompt for this via input instead of keeping in config
     }
 };
 
