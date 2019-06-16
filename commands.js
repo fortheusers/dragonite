@@ -1,7 +1,7 @@
 const config = require('./config');
 const GithubHelper = require('./github');
 const { discord, RichEmbed } = require('discord.js');
-const http = require("http");
+const http = require("https");
 
 const commands = {
     'updates': {
@@ -9,10 +9,10 @@ const commands = {
         action: async function(msg, command) {
             let toleranceCount = 0;
             let github = new GithubHelper();
-            config.getRepos.forEach(repo => {
+            for (let repo of config.getRepos) {
                 msg.channel.send(`Checking repo: <${repo}>`);
-                http.get(repo + "repo.json", response => {
-                    body = "";
+                http.get(repo + 'repo.json', response => {
+                    let body = "";
                     response.on('data', chunk => {
                         body += chunk;
                     });
@@ -20,12 +20,13 @@ const commands = {
                         let giveup = false;
                         let packages;
                         try {
-                            packages = JSON.parse(body)["packages"];
+                            packages = JSON.parse(body)['packages'];
                         } catch (e) {
                             msg.channel.send(new RichEmbed({
                                 color: 0xC73228,
-                                title: e.name + " while parsing JSON",
-                                description: e.message
+                                title: e.name + ' while parsing JSON',
+                                description: e.message,
+                                footer: {text: `Repo: ${repo}`}
                             }));
                             return;
                         }
@@ -36,6 +37,7 @@ const commands = {
                                         color: 0xFF9900,
                                         title: `${package.name} may be out of date`,
                                         description: `Ours is: \`${package.version}\`\nGithub's is:\`${gCheck.version}\`\n[Release Link](${gCheck.url})`,
+                                        footer: {text: repo},
                                         url: gCheck.url
                                     });
                                     msg.channel.send(outOfDate);
@@ -57,7 +59,7 @@ const commands = {
                         msg.reply(`Error occured while getting repo json, ${e.name}: ${e.message}`);
                     });
                 });
-            });
+            }
         }
     },
     "test": {
