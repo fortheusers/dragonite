@@ -1,9 +1,22 @@
 const config = require('./config');
 const GithubHelper = require('./github');
+const SSHRemote = require('./ssh');
 const { discord, RichEmbed } = require('discord.js');
 const http = require("https");
 
 const commands = {
+    'refresh': {
+        requiredPermissions: ['BAN_MEMBERS'],
+        action: async function(msg, command) {
+            // create a new SSH session to our remote server
+            const sshRemote = new SSHRemote();
+            await sshRemote.init(config.ssh);
+
+            await sshRemote.cd("mirror.fortheusers.org");
+            let res = await sshRemote.ls();
+            msg.channel.send(res);
+        }
+    },
     'updates': {
         requiredPermissions: ['BAN_MEMBERS'],
         action: async function(msg, command) {
