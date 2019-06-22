@@ -40,6 +40,11 @@ const EndpointHandler = class EndpointHandler{
     constructor(client, port, gitlab) {
         this.app = express();
         this.port = port;
+        this.app.use('/img/hey.gif', express.static('hey.gif'));
+        this.app.get('/', (req, res) => {
+          res.writeHead(302, {'Location': '/img/hey.gif'});
+          res.end();
+        });
         this.app.use(express.json());
 
         this.app.post('/package', (req, res) => {

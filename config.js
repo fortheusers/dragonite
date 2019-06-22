@@ -22,8 +22,8 @@ const config = {
       token: ''
     },
 
-    // the project to commit to upon submission approval
-    projectID: '12759473'
+    // the project to commit to upon submission approval (lines up with get repo)
+    projectIDs: ['12759473', '12759473']
   },
 
   github: {
