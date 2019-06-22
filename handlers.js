@@ -5,7 +5,7 @@ const {discord, RichEmbed} = require('discord.js');
 
 const MessageHandler = class MessageHandler{
     handleCommand(msg) {
-        if (msg.content.startsWith(config.commandPrefix)) {
+        if (msg.content.startsWith(config.discord.commandPrefix)) {
             console.log("Handling command " + msg.content);
             const cmd = msg.content.substring(1).split(' ');
             switch (cmd) {
@@ -101,7 +101,7 @@ const EndpointHandler = class EndpointHandler{
                     }
                     embed.addField('Assets', txt);
                 }
-                client.guilds.get(config.packageVerification.guild).channels.get(config.packageVerification.channel).send(embed).then(msg => {
+                client.guilds.get(config.discord.packageVerification.guild).channels.get(config.discord.packageVerification.channel).send(embed).then(msg => {
                     pendingPackages.push({id: msg.id, content: reqFormat});
                     msg.react('✅');
                     msg.react('❎');
@@ -112,7 +112,7 @@ const EndpointHandler = class EndpointHandler{
                 return;
             }
         });
-        this.app.listen(this.port, () => console.log(`Endpoint handler listening on port ${this.port}!`));
+        this.app.listen(this.port, () => console.log(`✅ [Submissions] Endpoint HTTP handler listening on port ${this.port}!`));
     }
 }
 

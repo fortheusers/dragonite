@@ -22,7 +22,7 @@ const commands = {
         action: async function(msg, command) {
             let toleranceCount = 0;
             let github = new GithubHelper();
-            for (let repo of config.getRepos) {
+            for (let repo of config.libget.repos) {
                 msg.channel.send(`Checking repo: <${repo}>`);
                 http.get(repo + 'repo.json', response => {
                     let body = "";
@@ -59,8 +59,8 @@ const commands = {
                                     if (e.status != 200 && !giveup) {
                                         msg.channel.send('Github responded with status `' + e.status + '` while checking <' + e.url + '>');
                                         toleranceCount++;
-                                        if (toleranceCount >= config.toleranceMax) {
-                                            msg.reply(`Gave up checking repos for updates in get repo ${repo} after ${config.toleranceMax} attempts!`);
+                                        if (toleranceCount >= config.libget.toleranceMax) {
+                                            msg.reply(`Gave up checking repos for updates in get repo ${repo} after ${config.libget.toleranceMax} attempts!`);
                                             giveup = true;
                                         }
                                     }

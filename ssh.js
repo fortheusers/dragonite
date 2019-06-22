@@ -1,5 +1,6 @@
 const SSHClient = require('ssh2').Client;
 const fs = require('fs');
+const prompt = require('prompt');
 
 class SSHRemote {
     // info about the SSH server:
@@ -14,21 +15,35 @@ class SSHRemote {
         port = 22
     }) {
         if (!user || !server || !keyPath) {
-            console.log("Error: SSH creds not specified, missing one of: user, server, keyPath");
-            return;
+            return false;
         }
 
         this.ssh = new SSHClient();
         this.cwd = "~";
 
-        await new Promise((resolve, reject) => {
+        const privateKey = fs.readFileSync(keyPath);
+        if (privateKey.includes("ENCRYPTED")) {
+            // prompt for a key pass
+            prompt.start();
+            keyPass = await new Promise((resolve, reject) => {
+                prompt.get([{
+                  name: 'passphrase',
+                  description: `[SSH] Enter SSH decryption passphrase for ${keyPath}`,
+                  hidden: true
+                }], (err, results) => {
+                    resolve(results.passphrase);
+                });
+            });
+        }
+
+        return await new Promise((resolve, reject) => {
             this.ssh.on('ready', () => {
                 resolve("Connected to remote SSH server");
              }).connect({
                  host: server,
                  port,
                  username: user,
-                 privateKey: fs.readFileSync(keyPath),
+                 privateKey,
                  passphrase: keyPass
              });
         });

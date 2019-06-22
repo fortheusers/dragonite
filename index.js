@@ -4,22 +4,20 @@ const config = require('./config.js');
 var Handlers = require('./handlers.js');
 var GitlabHelper = require('./gitlab');
 const SSHRemote = require('./ssh.js');
+const splash = require('./splash.js');
 
 var client = new Discord.Client();
+
+splash.showSplash();
 
 var gitlabHelper = new GitlabHelper();
 var msgHandler = new Handlers.MessageHandler(client, gitlabHelper);
 let endpointHandler = new Handlers.EndpointHandler(client, 457);
 
-// let ssh = new SSHRemote();
-// (async function() {
-//   console.log(await ssh.init(config.ssh));
-//   console.log(await ssh.ls());
-// })();
-
+// Connect to Discord
 client.on('ready', function () {
     global.pendingPackages = [];
-    console.log("Logged in as " + client.user.tag + "!");
+    console.log("[Discord] Logged in as " + client.user.tag + "!");
     cron.schedule('1 * * * *', () => {
       
       return;
@@ -27,7 +25,18 @@ client.on('ready', function () {
 });
 
 client.on('message', msgHandler.handleCommand);
-
 client.on('messageReactionAdd', Handlers.ReactionHandler.handleReaction);
+if (config.discord.token)
+    client.login(config.discord.token);
 
-client.login(config.token);
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+// do a test login over SSH to see if we need to prompt for a key
+(async function() {
+    if (config.ssh.user && config.ssh.server) {
+        const sshRemote = new SSHRemote();
+        await sleep(500);
+        await sshRemote.init(config.ssh);
+    }
+})();
