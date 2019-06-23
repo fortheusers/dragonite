@@ -12,7 +12,7 @@ splash.showSplash();
 
 var gitlabHelper = new GitlabHelper();
 var msgHandler = new Handlers.MessageHandler(client, gitlabHelper);
-let endpointHandler = new Handlers.EndpointHandler(client, 457);
+let endpointHandler = new Handlers.EndpointHandler(client, config.http.port);
 
 // Connect to Discord
 client.on('ready', function () {
