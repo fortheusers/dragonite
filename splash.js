@@ -30,7 +30,7 @@ const showSplash = () => {
       console.log("❌ [Committing] Missing Gitlab token in Config")
 
   // Check Github
-  if (config.github.initOptions.token)
+  if (config.github.initOptions.auth)
       console.log("✅ [Updates] Github token present")
   else
       console.log("❌ [Updates] Missing Github token in Config")
