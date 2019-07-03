@@ -52,7 +52,6 @@ const EndpointHandler = class EndpointHandler{
             req.pipe(fs.createWriteStream("./course.zip"));
             console.log(req.params.uuid);
             console.log(req.params.package);
-            res.status(200).end();
         });
 
         this.app.post('/package', (req, res) => {
