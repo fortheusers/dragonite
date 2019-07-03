@@ -2,6 +2,7 @@ var config = require("./config.js");
 const commands = require('./commands');
 const express = require('express');
 const {discord, RichEmbed} = require('discord.js');
+const fs = require('fs');
 
 const MessageHandler = class MessageHandler{
     handleCommand(msg) {
@@ -46,6 +47,13 @@ const EndpointHandler = class EndpointHandler{
           res.end();
         });
         this.app.use(express.json());
+
+        this.app.put('/mmcourse', (req, res) => {
+            req.pipe(fs.createWriteStream("./course.zip"));
+            console.log(req.query.uuid);
+            console.log(req.query.package);
+            res.status(200).end();
+        });
 
         this.app.post('/package', (req, res) => {
             res.set('Access-Control-Allow-Origin', '*');
