@@ -48,10 +48,10 @@ const EndpointHandler = class EndpointHandler{
         });
         this.app.use(express.json());
 
-        this.app.put('/mmcourse', (req, res) => {
+        this.app.put('/mmcourse/:uuid/:package', (req, res) => {
             req.pipe(fs.createWriteStream("./course.zip"));
-            console.log(req.query.uuid);
-            console.log(req.query.package);
+            console.log(req.params.uuid);
+            console.log(req.params.package);
             res.status(200).end();
         });
 
