@@ -49,9 +49,13 @@ const EndpointHandler = class EndpointHandler{
         this.app.use(express.json());
 
         this.app.put('/mmcourse/:uuid/:package', (req, res) => {
-            req.pipe(fs.createWriteStream("./course.zip"));
+            var pipe = req.pipe(fs.createWriteStream("./course.zip"));
             console.log(req.params.uuid);
             console.log(req.params.package);
+            pipe.on('end', () => {
+                res.statusCode = 200;
+                return res.end();
+            });
         });
 
         this.app.post('/package', (req, res) => {
