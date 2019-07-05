@@ -3,8 +3,9 @@
     "@octokit/rest": "^16.28.0",
     "discord.js": "^11.4.2",
     "express": "^4.17.1",
-    "gitlab": "^6.2.0",
+    "gitlab": "^7.0.1",
     "https": "^1.0.0",
+    "lowdb": "^1.0.0",
     "node-cron": "^2.0.3",
     "prompt": "^1.0.0",
     "ssh2": "^0.8.4"

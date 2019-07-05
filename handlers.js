@@ -38,7 +38,8 @@ const MessageHandler = class MessageHandler{
 }
 
 const EndpointHandler = class EndpointHandler{
-    constructor(client, port, gitlab) {
+    constructor(client, port, gitlab, db) {
+        this.db = db;
         this.app = express();
         this.port = port;
         this.app.use('/img/hey.gif', express.static('hey.gif'));

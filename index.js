@@ -5,14 +5,16 @@ var Handlers = require('./handlers.js');
 var GitlabHelper = require('./gitlab');
 const SSHRemote = require('./ssh.js');
 const splash = require('./splash.js');
+const Database = require('./database.js');
 
 var client = new Discord.Client();
 
 splash.showSplash();
 
 var gitlabHelper = new GitlabHelper();
+let db = new Database();
 var msgHandler = new Handlers.MessageHandler(client, gitlabHelper);
-let endpointHandler = new Handlers.EndpointHandler(client, config.http.port);
+let endpointHandler = new Handlers.EndpointHandler(client, config.http.port, db);
 
 // Connect to Discord
 client.on('ready', function () {
