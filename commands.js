@@ -5,7 +5,7 @@ const { discord, RichEmbed } = require('discord.js');
 const http = require("https");
 
 const commands = {
-    'refresh': {
+    'nrefresh': {
         requiredPermissions: ['BAN_MEMBERS'],
         action: async function(msg, command) {
             // create a new SSH session to our remote server
@@ -15,6 +15,29 @@ const commands = {
             await sshRemote.cd("mirror.fortheusers.org");
             let res = await sshRemote.ls();
             msg.channel.send(res);
+        }
+    },
+    'refresh': {
+        requiredPermissions: ['BAN_MEMBERS'],
+        action: async function (msg, command) {
+            const cmds = msg.content.split(/ /+).shift();
+            const repo = cmds.length ? cmds[cmds.length - 1] : 'switch';
+            const url = `https://${repo}bru.com`;
+            var options = {
+                host: url,
+                port: 80,
+                path: '/appstore/repogen.py',
+                method: 'GET'
+            };
+
+            msg.channel.send(`Refreshing ${url}...`);
+
+            http.request(options, function(res) {
+                res.setEncoding('utf8');
+                res.on('data', function (chunk) {
+                    msg.channel.send(chunk);
+                });
+            }).end();
         }
     },
     'updates': {
