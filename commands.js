@@ -20,7 +20,7 @@ const commands = {
     'refresh': {
         requiredPermissions: ['BAN_MEMBERS'],
         action: async function (msg, command) {
-            const cmds = msg.content.split(/ /+).shift();
+            const cmds = msg.content.split(/ +/).shift();
             const repo = cmds.length ? cmds[cmds.length - 1] : 'switch';
             const url = `https://${repo}bru.com`;
             var options = {
