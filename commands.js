@@ -23,10 +23,10 @@ const commands = {
             const cmds = msg.content.split(/ +/);
             cmds.shift();
             const repo = cmds.length ? cmds[cmds.length - 1] : 'switch';
-            const url = `https://${repo}bru.com`;
+            const url = `${repo}bru.com`;
             var options = {
                 host: url,
-                port: 80,
+                port: 443,
                 path: '/appstore/repogen.py',
                 method: 'GET'
             };
