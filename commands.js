@@ -69,16 +69,15 @@ const commands = {
                             (pkg.details && pkg.details.toLowerCase().includes(query)) ||
                             (pkg.description && pkg.description.toLowerCase().includes(query));
                     });
-                    res.map(p => {
-                        const blurb = new RichEmbed({
-                            color: 0x2277aa,
-                            title: p.title,
-                            description: p.description,
-                            footer: {text: p.author},
-                            url: `https://apps.fortheusers.org/apps/${p.name}`
-                        });
-                        msg.channel.send(blurb);
+                    const res2 = res.map(p => `[${p.title}](https://apps.fortheusers.org/app/${p.name}) by ${p.author} / ${p.description}`);
+                    res2.length = 10;
+                    const blurb = new RichEmbed({
+                        color: 0x2277aa,
+                        description: res2.join("\n"),
+                        footer: {text: "apps.fortheusers.org"},
+                        url: `https://apps.fortheusers.org/app/${p.name}`
                     });
+                    msg.channel.send(blurb);
                 });
             }).end();
         }
