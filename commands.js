@@ -56,8 +56,12 @@ const commands = {
 
             http.request(options, function(res) {
                 res.setEncoding('utf8');
+                let resp = "";
                 res.on('data', function (chunk) {
-                    const repo = JSON.parse(chunk)['packages'];
+                    resp += chunk;
+                });
+                res.on('end', function () {
+                    const repo = JSON.parse(resp)['packages'];
                     const res = repo.filter(pkg =>  {
                         return (pkg.name && pkg.name.toLowerCase().includes(query)) ||
                             (pkg.title && pkg.title.toLowerCase().includes(query)) ||
