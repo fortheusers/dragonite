@@ -41,6 +41,35 @@ const commands = {
             }).end();
         }
     },
+    'search': {
+        requiredPermissions: [],
+        action: async function (msg, command) {
+            const cmds = msg.content.split(/ +/);
+            cmds.shift();
+            const query = cmds.join(" ").toLowerCase();
+            var options = {
+                host: `switchbru.com`,
+                port: 443,
+                path: '/appstore/repo.json',
+                method: 'GET'
+            };
+
+            http.request(options, function(res) {
+                res.setEncoding('utf8');
+                res.on('data', function (chunk) {
+                    const repo = JSON.parse(data)['packages'];
+                    const res = repo.filter(pkg =>  {
+                        return (pkg.name && pkg.name.toLowerCase().includes(query)) ||
+                            (pkg.title && pkg.title.toLowerCase().includes(query)) ||
+                            (pkg.author && pkg.author.toLowerCase().includes(query)) ||
+                            (pkg.details && pkg.details.toLowerCase().includes(query)) ||
+                            (pkg.description && pkg.description.toLowerCase().includes(query));
+                    });
+                    msg.channel.send(res.map(p => `[${p.title}] p.description - https://apps.fortheusers.org/app/${p.name}`)`.join("\n"));
+                });
+            }).end();
+        }
+    },
     'updates': {
         requiredPermissions: ['BAN_MEMBERS'],
         action: async function(msg, command) {
