@@ -1,9 +1,11 @@
 ## Dragonite
+![logo](logo.png)
+
 A discord bot for managing [hb-appstore](https://gitlab.com/4TU/hb-appstore) submissions, approvals, update checking, and cross-posting to other channels.
 
 To configure, edit `config.json` with different appropriate values. Most fields can be left blank, but if they are then that feature won't be running when Dragonite comes up, alongside a message in the console explaining what is and isn't working.
 
-![https://cdn.discordapp.com/attachments/546092197091737602/591638120907407360/Untitled_sasDiagram.png](process)
+![process](https://cdn.discordapp.com/attachments/546092197091737602/591638120907407360/Untitled_sasDiagram.png)
 
 ### Approvals
 When a new app is detected either from [submitter](https://gitlab.com/4TU/submitter) or via update-checking, a message is posted into the Discord channel specified by `config.discord.packageVerification.channel`.

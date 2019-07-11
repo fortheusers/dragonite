@@ -69,7 +69,16 @@ const commands = {
                             (pkg.details && pkg.details.toLowerCase().includes(query)) ||
                             (pkg.description && pkg.description.toLowerCase().includes(query));
                     });
-                    msg.channel.send(res.map(p => `[${p.title}] p.description - https://apps.fortheusers.org/app/${p.name}`).join("\n"));
+                    res.map(p => {
+                        const blurb = new RichEmbed({
+                            color: 0x2277aa,
+                            title: p.title,
+                            description: p.description,
+                            footer: {text: p.author},
+                            url: `https://apps.fortheusers.org/apps/${p.name}`
+                        });
+                        msg.channel.send(blurb);
+                    });
                 });
             }).end();
         }
