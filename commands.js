@@ -74,8 +74,7 @@ const commands = {
                     const blurb = new RichEmbed({
                         color: 0x2277aa,
                         description: res2.join("\n"),
-                        footer: {text: "apps.fortheusers.org"},
-                        url: `https://apps.fortheusers.org/app/${p.name}`
+                        footer: {text: "apps.fortheusers.org"}
                     });
                     msg.channel.send(blurb);
                 });
