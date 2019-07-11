@@ -36,7 +36,7 @@ const commands = {
             http.request(options, function(res) {
                 res.setEncoding('utf8');
                 res.on('data', function (chunk) {
-                    msg.channel.send(chunk);
+                    msg.channel.send(chunk.replace(/<br>/g, ""));
                 });
             }).end();
         }
