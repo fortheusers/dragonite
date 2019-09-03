@@ -11,6 +11,15 @@ const showSplash = () => {
 
   // config checks at startup
 
+  // Check DB salt
+
+  if (config.database.banSalt.length < 8 || config.database.banSalt.length < 8 || config.database.banSalt.length < 8 || config.database.banSalt == config.database.metaSalt == config.database.pkgSalt)
+  {
+      console.log('❌ [Database] *** Insecure salt in config.js! Please use different values of 8 chars or more ***');
+      console.log('Exiting...');
+      process.exit(1);
+  }
+
   // Check Discord
   if (config.discord.token)
       console.log("✅ [Approvals] Discord tokens present, ready to connect")

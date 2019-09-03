@@ -12,9 +12,9 @@ var client = new Discord.Client();
 splash.showSplash();
 
 var gitlabHelper = new GitlabHelper();
-let db = new Database();
+global.dtb = new Database();
 var msgHandler = new Handlers.MessageHandler(client, gitlabHelper);
-let endpointHandler = new Handlers.EndpointHandler(client, config.http.port, db);
+let endpointHandler = new Handlers.EndpointHandler(client, config.http.port);
 
 // Connect to Discord
 client.on('ready', function () {

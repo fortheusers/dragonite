@@ -40,6 +40,12 @@ const config = {
 
   http: {
     port: 457
+  },
+
+  database: {
+    pkgSalt: '',
+    banSalt: '',
+    metaSalt: ''
   }
 };
 

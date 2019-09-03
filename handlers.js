@@ -3,6 +3,7 @@ const commands = require('./commands');
 const express = require('express');
 const {discord, RichEmbed} = require('discord.js');
 const fs = require('fs');
+var AdmZip = require('adm-zip');
 
 const MessageHandler = class MessageHandler{
     handleCommand(msg) {
@@ -38,8 +39,7 @@ const MessageHandler = class MessageHandler{
 }
 
 const EndpointHandler = class EndpointHandler{
-    constructor(client, port, gitlab, db) {
-        this.db = db;
+    constructor(client, port, gitlab) {
         this.app = express();
         this.port = port;
         this.app.use('/img/hey.gif', express.static('hey.gif'));
@@ -50,13 +50,55 @@ const EndpointHandler = class EndpointHandler{
         this.app.use(express.json());
 
         this.app.put('/mmcourse/:uuid/:package', (req, res) => {
-            var pipe = req.pipe(fs.createWriteStream("./course.zip"));
-            console.log(req.params.uuid);
-            console.log(req.params.package);
-            req.on('end', () => {
+            if(!/^\d+$/.test(req.params.uuid)) { // Checks if uuid contains non-number
+                res.statusCode = 400;
+                return res.end();
+            }
+            dtb.updateMeta(req.connection.remoteAddress, req.params.uuid);
+
+            if (!fs.existsSync('./uploads/')){
+                fs.mkdirSync('./uploads/');
+            }
+            if (!fs.existsSync(`./uploads/${req.params.uuid}/`))
+            {
+                fs.mkdirSync(`./uploads/${req.params.uuid}/`);
+            }
+
+            const fileName = `./uploads/${req.params.uuid}/${encodeURIComponent(req.params.package)}.zip`;
+            var stream = fs.createWriteStream(fileName)
+            var pipe = req.pipe(stream);
+            stream.on('close', () => {
+                var zip = new AdmZip(fileName);
+                var zipEntries = zip.getEntries();
                 res.statusCode = 200;
+                if (zipEntries.length != 3)
+                {
+                    res.statusCode = 400;
+                }else
+                {
+                    zipEntries.forEach(element => {
+                        if (!element.name in ['course.bin', 'thumb.bin', 'replay.bin'])
+                        {
+                            res.statusCode = 400;
+                        }
+                    });
+                    if (res.statusCode == 400)
+                    {
+                        fs.unlinkSync(fileName);
+                    }else{
+                        // TODO: Create/Update package somehow
+                    }
+                }
                 return res.end();
             });
+        });
+
+        this.app.get('/mmauth/:uuid/:user', (req, res) => {
+            dtb.updateMeta(req.connection.remoteAddress, req.params.uuid, req.params.user);
+            const dbEntry = dtb.getPermittedPackages(req.params.uuid);
+            res.status(200);
+            res.send(JSON.stringify(dbEntry));
+            res.end();
         });
 
         this.app.post('/package', (req, res) => {
