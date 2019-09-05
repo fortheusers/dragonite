@@ -103,8 +103,8 @@ const Database = class Database {
             if (getname != undefined) metaEntry.set('name', getname).write();
         } else {
             const pubid = crypto.createHash('sha256').update(getuuid+moment().unix().toString()).digest('hex');
-            if (getname != undefined) this.db.get('meta').push({lastip: getip, uuid: getuuid, name: getname, publicid: pubid}).write();
-            else this.db.get('meta').push({lastip: getip, uuid: getuuid}).write();
+            if (getname != undefined) this.db.get('meta').push({lastip: getip, uuid: uuidhash, name: getname, publicid: pubid}).write();
+            else this.db.get('meta').push({lastip: getip, uuid: uuidhash}).write();
         }
 
     }
