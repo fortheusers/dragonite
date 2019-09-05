@@ -1,6 +1,7 @@
 var config = require("./config.js");
 const commands = require('./commands');
 const express = require('express');
+const cors = require('cors');
 const {discord, RichEmbed} = require('discord.js');
 const fs = require('fs');
 var AdmZip = require('adm-zip');
@@ -41,6 +42,8 @@ const MessageHandler = class MessageHandler{
 const EndpointHandler = class EndpointHandler{
     constructor(client, port, gitlab) {
         this.app = express();
+	this.app.use(cors());
+	this.app.use(express.json({limit: '50mb'}));
         this.port = port;
         this.app.use('/img/hey.gif', express.static('hey.gif'));
         this.app.get('/', (req, res) => {
@@ -102,9 +105,8 @@ const EndpointHandler = class EndpointHandler{
         });
 
         this.app.post('/package', (req, res) => {
-            res.set('Access-Control-Allow-Origin', '*');
-            res.set('Access-Control-Allow-Headers', '*');
-            res.set('Access-Control-Allow-Method', '*');
+	    res.header("Access-Control-Allow-Origin", "*");
+            res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
 
             let reqFormat = req.body;
             try {
@@ -119,12 +121,12 @@ const EndpointHandler = class EndpointHandler{
                         },
                         {
                             name: 'Type',
-                            value: reqFormat.type,
+                            value: reqFormat.type || "unspecified",
                             inline: true
                         },
                         {
                             name: 'Track Github',
-                            value: reqFormat.trackGithub,
+                            value: reqFormat.trackGithub || "unspecified",
                             inline: true
                         }
                     ]
@@ -158,15 +160,18 @@ const EndpointHandler = class EndpointHandler{
                             }
                         }
                     }
-                    embed.addField('Assets', txt);
+                    embed.addField('Assets', txt || "unspecified");
                 }
                 client.guilds.get(config.discord.packageVerification.guild).channels.get(config.discord.packageVerification.channel).send(embed).then(msg => {
                     pendingPackages.push({id: msg.id, content: reqFormat});
                     msg.react('✅');
                     msg.react('❎');
                 });
+		console.log("all set");
                 res.status(200).end();
             } catch (e) {
+		console.log("Some error");
+		console.log(`${e.name} - ${e.message}`);
                 res.status(400).send({error: e.name, message: e.message}).end();
                 return;
             }

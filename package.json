@@ -2,6 +2,7 @@
   "dependencies": {
     "@octokit/rest": "^16.28.0",
     "adm-zip": "^0.4.13",
+    "cors": "^2.8.5",
     "discord.js": "^11.4.2",
     "express": "^4.17.1",
     "gitlab": "^7.0.1",
