@@ -4,7 +4,22 @@ const express = require('express');
 const cors = require('cors');
 const {discord, RichEmbed} = require('discord.js');
 const fs = require('fs');
+const geoip  = require('geoip-lite');
 var AdmZip = require('adm-zip');
+
+const convertb64AndSetEmbed = (embed, data, val, files) => {
+    let base64Image = data.split(';base64,').pop();
+    const name = `tmp_embed_${val}.png`;
+    const path = `/tmp/${name}`;
+    const attachPath = `attachment://${name}`;
+    fs.writeFileSync(path, base64Image, {encoding: 'base64'});
+    files.push({"attachment": path, name})
+
+    if (val)
+        embed.setThumbnail(attachPath);
+    else
+        embed.setImage(attachPath);
+};
 
 const MessageHandler = class MessageHandler{
     handleCommand(msg) {
@@ -41,9 +56,10 @@ const MessageHandler = class MessageHandler{
 
 const EndpointHandler = class EndpointHandler{
     constructor(client, port, gitlab) {
-        this.app = express();
-	this.app.use(cors());
-	this.app.use(express.json({limit: '50mb'}));
+    this.app = express();
+    this.app.use(cors());
+    this.app.use(express.json({limit: '15mb'}));
+    
         this.port = port;
         this.app.use('/img/hey.gif', express.static('hey.gif'));
         this.app.get('/', (req, res) => {
@@ -108,6 +124,9 @@ const EndpointHandler = class EndpointHandler{
 	    res.header("Access-Control-Allow-Origin", "*");
             res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
 
+            const ip = (req.headers['x-real-ip'] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
+            const geoness = geoip.lookup(ip);
+
             let reqFormat = req.body;
             try {
                 let embed = new RichEmbed({
@@ -116,29 +135,27 @@ const EndpointHandler = class EndpointHandler{
                     fields: [
                         {
                             name: 'Package',
-                            value: reqFormat.package,
-                            inline: true
-                        },
-                        {
-                            name: 'Type',
-                            value: reqFormat.type || "unspecified",
-                            inline: true
-                        },
-                        {
-                            name: 'Track Github',
-                            value: reqFormat.trackGithub || "unspecified",
+                            value: reqFormat.package.replace(/[^\w.-]+/g, ""), // TODO: check no collisions
                             inline: true
                         }
                     ]
                 });
                 if (reqFormat.info.title) embed.addField('Title', reqFormat.info.title, true);
                 if (reqFormat.info.author) embed.addField('Author', reqFormat.info.author, true);
-                if (reqFormat.info.description) embed.addField('Description', reqFormat.info.description, true);
+                if (reqFormat.info.version) embed.addField('Version', reqFormat.info.version, true);
+                if (reqFormat.info.url) embed.addField('URL', reqFormat.info.url, true);
+                
+                if (reqFormat.info.description) embed.addField('Description', reqFormat.info.description);
+
                 if (reqFormat.info.category) embed.addField('Category', reqFormat.info.category, true);
                 if (reqFormat.info.license) embed.addField('License', reqFormat.info.license, true);
-                if (embed.fields.length % 3 != 0) embed.addBlankField(true);
-                if (embed.fields.length % 3 != 0) embed.addBlankField(true);
+                if (reqFormat.console) embed.addField('Console', reqFormat.console, true);
+                if (reqFormat.submitter) embed.addField('Contact', reqFormat.submitter, true);
+                if (ip) embed.addField('IP', ip, true);
+                if (geoness && geoness.timezone) embed.addField('Location', geoness.timezone, true);
+
                 if (reqFormat.info.details) embed.addField('Details', reqFormat.info.details.replace(/\\n/g, '\n'));
+                const files = [];
                 if (reqFormat.assets && reqFormat.assets.length > 0) {
                     let txt = '';
                     for (let asset of reqFormat.assets) {
@@ -146,8 +163,13 @@ const EndpointHandler = class EndpointHandler{
                             switch (asset.type) {
                                 case 'icon':
                                     if (asset.format && asset.format == 'url') embed.setThumbnail(asset.data);
+                                    if (asset.format && asset.format == 'base64') convertb64AndSetEmbed(embed, asset.data, true, files);
+                                    break;
                                 case 'screen':
+                                case 'screenshot':
                                     if (asset.format && asset.format == 'url') embed.setImage(asset.data);
+                                    if (asset.format && asset.format == 'base64') convertb64AndSetEmbed(embed, asset.data, false, files);
+                                    break;
                                 case 'update':
                                 case 'extract':
                                 case 'local':
@@ -160,17 +182,18 @@ const EndpointHandler = class EndpointHandler{
                             }
                         }
                     }
-                    embed.addField('Assets', txt || "unspecified");
+                    embed.addField('Assets', txt || "TODO: actually let them specify assets");
                 }
-                client.guilds.get(config.discord.packageVerification.guild).channels.get(config.discord.packageVerification.channel).send(embed).then(msg => {
+                client.guilds.get(config.discord.packageVerification.guild).channels.get(config.discord.packageVerification.channel).send({embed, files}).then(msg => {
                     pendingPackages.push({id: msg.id, content: reqFormat});
                     msg.react('✅');
                     msg.react('❎');
+                    client.guilds.get(config.discord.logging.guild).channels.get(config.discord.logging.channel).send({embed, files});
                 });
-		console.log("all set");
+		console.log("submission received");
                 res.status(200).end();
             } catch (e) {
-		console.log("Some error");
+		console.log("error with submission");
 		console.log(`${e.name} - ${e.message}`);
                 res.status(400).send({error: e.name, message: e.message}).end();
                 return;
@@ -190,19 +213,35 @@ const ReactionHandler = class ReactionHandler {
             console.log(reaction);
             if (i != -1) {
                 if (reaction.emoji.name == '✅') {
-                    reaction.message.edit(new RichEmbed({
+                    reaction.message.edit({ embed: new RichEmbed({
                         title: pendingPackages[i].content.package,
                         color: 0x85A352,
-                        footer: {text: 'Package submission approved', iconURL: 'https://github.com/google/material-design-icons/raw/master/action/drawable-xxhdpi/ic_done_white_48dp.png'},
-                        url: pendingPackages[i].content.package.url
-                    }));
+                        iconURL: "/tmp/tmp_embed_true.png",
+                        footer: {text: 'Package submission approved'},
+                        url: pendingPackages[i].content.info.url,
+                        fields: [
+                            {
+                                name: 'Commit',
+                                value: "TODO: fill me out after committing",
+                                inline: true
+                            }
+                        ]
+                    }), files: []});
                 } else if (reaction.emoji.name == '❎') {
-                    reaction.message.edit(new RichEmbed({
+                    reaction.message.edit({embed: new RichEmbed({
                         title: pendingPackages[i].content.package,
                         color: 0xC73228,
                         footer: {text: 'Package submission denied'},
-                        url: pendingPackages[i].content.package.url
-                    }));
+                        url: pendingPackages[i].content.info.url,
+                        iconURL: "/tmp/tmp_embed_true.png",
+                        fields: [
+                            {
+                                name: 'Contact',
+                                value: pendingPackages[i].content.submitter,
+                                inline: true
+                            }
+                        ]
+                    }), files: []});
                 }
                 reaction.message.clearReactions();
                 pendingPackages.splice(i, 1);
