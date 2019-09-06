@@ -6,7 +6,8 @@ const config = {
     commandPrefix: '.',
 
     // All verification messages get sent here
-    packageVerification: {channel: '586650866086576157', guild: '339118412414582786'}
+    packageVerification: {channel: '586650866086576157', guild: '339118412414582786'},
+    logging: {channel: '619558011656077341', guild: '339118412414582786'}
   },
 
   libget: {
