@@ -124,7 +124,7 @@ const EndpointHandler = class EndpointHandler{
 	    res.header("Access-Control-Allow-Origin", "*");
             res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
 
-            const ip = (req.headers['x-real-ip'] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
+            const ip = req.headers['x-real-ip'] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
             const geoness = geoip.lookup(ip);
 
             let reqFormat = req.body;
