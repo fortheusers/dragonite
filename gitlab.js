@@ -43,7 +43,7 @@ const GitlabHelper = class GitlabHelper {
         });
         commitFiles[0].content = JSON.stringify(commitJson, null, 1);
         
-        return this.api.Commits.create(config.gitlab.projectIDs[0], "master", `${subpackage.type}: ${subpackage.package} (${subpackage.info.version})`, commitFiles, {author_email: "dragonite@fortheusers.org", author_name: "Dragonite Bot"});
+        return this.api.Commits.create(config.gitlab.projectIDs['test'], "master", `${subpackage.type}: ${subpackage.package} (${subpackage.info.version})`, commitFiles, {author_email: "dragonite@fortheusers.org", author_name: "Dragonite Bot"});
     }
 }
 module.exports = GitlabHelper;

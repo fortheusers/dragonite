@@ -265,7 +265,7 @@ const ReactionHandler = class ReactionHandler {
                       reaction.message.channel.send({ embed });
                       // reaction.message.delete();
                     } catch(err) {
-                      reaction.message.channel.send(`Error while trying to commit to metadata repo! ${err.message}`);
+                      reaction.message.channel.send(`Error while trying to commit to metadata repo!\n \`\`\`json\n${JSON.stringify(err, null, 1)}\`\`\``);
                       return;
                     }
 
