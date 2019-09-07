@@ -29,7 +29,7 @@ const GitlabHelper = class GitlabHelper {
                         commitJson.assets.push({url: asset.data, type: asset.type});
                     }else if (asset.format == 'base64') {
                         commitJson.assets.push({url: asset.type + '.png', type: asset.type});
-                        commitFiles.push({action: 'create', filePath: subpackage.package + '/' + asset.type + '.png', encoding: 'base64', content: asset.data});
+                        commitFiles.push({action: 'create', filePath: subpackage.package + '/' + asset.type + '.png', encoding: 'base64', content: asset.data.substr(22)});
                     }
                     break;
                 case 'zip':
