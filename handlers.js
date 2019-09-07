@@ -282,6 +282,7 @@ const ReactionHandler = class ReactionHandler {
                       const resp = (await global.gitlabHelper.commitPackage(pendingPackages[i].content)).id;
                       embed.addField("Commit", `https://gitlab.com/4tu/dragonite-test-repo/commit/${resp}`, true);
                       reaction.message.channel.send({ embed });
+                      await sleep(10000);
                       var isComplete = await global.gitlabHelper.checkPipeline(pendingPackages[i].content.console);
                       var count = 0;
                       while (isComplete !== true) {
@@ -310,7 +311,7 @@ const ReactionHandler = class ReactionHandler {
                               name: 'By ' + pendingPackages[i].content.info.author
                           }
                       });
-                      reaction.message.client.guilds.get(config.discord.publicReleases.guild).channels.get(config.discord.publicReleases.channel).send({ pubEmbed });
+                      reaction.message.client.guilds.get(config.discord.publicReleases.guild).channels.get(config.discord.publicReleases.channel).send({embed: pubEmbed });
                       // reaction.message.delete();
                     } catch(err) {
                         console.log(err);
