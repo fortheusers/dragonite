@@ -282,11 +282,11 @@ const ReactionHandler = class ReactionHandler {
                       const resp = (await global.gitlabHelper.commitPackage(pendingPackages[i].content)).id;
                       embed.addField("Commit", `https://gitlab.com/4tu/dragonite-test-repo/commit/${resp}`, true);
                       reaction.message.channel.send({ embed });
-                      var isComplete = global.gitlabHelper.checkPipeline(pendingPackages[i].content.console);
+                      var isComplete = await global.gitlabHelper.checkPipeline(pendingPackages[i].content.console);
                       var count = 0;
                       while (isComplete !== true) {
                           await sleep(10000);
-                          isComplete = global.gitlabHelper.checkPipeline(pendingPackages[i].content.console);
+                          isComplete = await global.gitlabHelper.checkPipeline(pendingPackages[i].content.console);
                           count++;
                           if (count > 8) {
                               reaction.message.channel.send('Pipeline took too long or failed! Aborting final check + release announcement');

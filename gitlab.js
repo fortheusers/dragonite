@@ -46,7 +46,7 @@ const GitlabHelper = class GitlabHelper {
         return this.api.Commits.create(config.gitlab.projectIDs[subpackage.console], "master", `${subpackage.type}: ${subpackage.package} (${subpackage.info.version})`, commitFiles, {author_email: "dragonite@fortheusers.org", author_name: "Dragonite Bot"});
     }
 
-    checkPipeline(repo) {
+    async checkPipeline(repo) {
         var allDone = true;
         var pipes = await this.api.Pipelines.all(config.gitlab.projectIDs[repo])
         pipes.forEach(pipe => {
