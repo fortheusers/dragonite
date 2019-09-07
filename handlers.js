@@ -129,6 +129,7 @@ const EndpointHandler = class EndpointHandler{
             const geoness = geoip.lookup(ip);
 
             let reqFormat = req.body;
+            reqFormat.package = reqFormat.package.replace(/[^a-z0-9]/gi, '');
             try {
                 let embed = new RichEmbed({
                     title: 'Package submission received',
@@ -136,7 +137,7 @@ const EndpointHandler = class EndpointHandler{
                     fields: [
                         {
                             name: 'Package',
-                            value: reqFormat.package.replace(/[^a-z0-9]/gi, ''), // TODO: check no collisions
+                            value: reqFormat.package, // TODO: check no collisions
                             inline: true
                         }
                     ]
@@ -231,7 +232,7 @@ const ReactionHandler = class ReactionHandler {
                     var zipI = pendingPackages[i].content.assets.indexOf(a => a.type === 'zip');
                     if (zipI === -1) {
                         var gh = new GithubHelper();
-                        var zipUrl = await gh.getRelease(pendingPackages[i].content.info.url);
+                        var zipUrl = await gh.getRelease(pendingPackages[i].content.info.url, '.zip');
                         pendingPackages[i].content.assets.push({type: 'zip', url: zipUrl, zip: [{path: '/', dest:'/', type: 'update'}]});
                     }
 

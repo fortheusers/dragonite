@@ -30,7 +30,7 @@ const GithubHelper = class GithubHelper {
         throw {status: latestReleases.status, url: url};
     }
 
-    async getRelease(url) {
+    async getRelease(url, extension = null) {
         let parsedUrl = new URL(url).pathname;
         parsedUrl = parsedUrl.split('/');
         const user = parsedUrl[1];
@@ -42,7 +42,11 @@ const GithubHelper = class GithubHelper {
             console.warn(`Repo ${repo} found to have no releases`);
             return;
         }
-        return latestRelease.assets[0].browser_download_url;
+        if (extension == null) {
+            return latestRelease.assets[0].browser_download_url;
+        } else {
+            return latestRelease.assets.find(a => a.name.endsWith(extension));
+        }
     }
 }
 
