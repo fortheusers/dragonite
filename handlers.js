@@ -6,6 +6,7 @@ const {discord, RichEmbed} = require('discord.js');
 const fs = require('fs');
 const geoip  = require('geoip-lite');
 var AdmZip = require('adm-zip');
+const GithubHelper = require('./github');
 
 const convertb64AndSetEmbed = (embed, data, val, files) => {
     let base64Image = data.split(';base64,').pop();
@@ -204,7 +205,7 @@ const EndpointHandler = class EndpointHandler{
 }
 
 const ReactionHandler = class ReactionHandler {
-    static handleReaction(reaction, user) {
+    static async handleReaction(reaction, user) {
         const id = reaction.message.id;
         if (reaction.users.size == 2) {
             const i = pendingPackages.findIndex(a => {
@@ -227,6 +228,15 @@ const ReactionHandler = class ReactionHandler {
                             }
                         ]
                     }), files: []});
+                    var zipI = pendingPackages[i].content.assets.indexOf(a => a.type === 'zip');
+                    if (zipI === -1) {
+                        var gh = new GithubHelper();
+                        var zipUrl = await gh.getRelease(pendingPackages[i].content.info.url);
+                        pendingPackages[i].content.assets.push({type: 'zip', url: zipUrl, zip: [{path: '/', dest:'/', type: 'update'}]});
+                    }
+
+                    global.gitlabHelper.commitPackage(pendingPackages[i].content);
+
                 } else if (reaction.emoji.name == '❎') {
                     reaction.message.edit({embed: new RichEmbed({
                         title: pendingPackages[i].content.package,

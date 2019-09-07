@@ -29,6 +29,21 @@ const GithubHelper = class GithubHelper {
             return {status: latestReleases.status, url: latestRelease.html_url, version: formattedVersion, name: latestRelease.name};
         throw {status: latestReleases.status, url: url};
     }
+
+    async getRelease(url) {
+        let parsedUrl = new URL(url).pathname;
+        parsedUrl = parsedUrl.split('/');
+        const user = parsedUrl[1];
+        const repo = parsedUrl[2];
+        const latestReleases = await this.octokit.repos.listReleases({owner: user, repo: repo});
+        if (latestReleases.status != 200) throw {status: latestReleases.status, url: url};
+        const latestRelease = latestReleases.data[0];
+        if (latestRelease === undefined || latestRelease.length == 0) {
+            console.warn(`Repo ${repo} found to have no releases`);
+            return;
+        }
+        return latestRelease.assets[0].browser_download_url;
+    }
 }
 
 module.exports = GithubHelper;

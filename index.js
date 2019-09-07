@@ -11,7 +11,7 @@ var client = new Discord.Client();
 
 splash.showSplash();
 
-var gitlabHelper = new GitlabHelper();
+global.gitlabHelper = new GitlabHelper();
 global.dtb = new Database();
 var msgHandler = new Handlers.MessageHandler(client, gitlabHelper);
 let endpointHandler = new Handlers.EndpointHandler(client, config.http.port);
