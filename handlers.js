@@ -205,6 +205,11 @@ const EndpointHandler = class EndpointHandler{
     }
 }
 
+async function sleep(ms)
+{
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 const ReactionHandler = class ReactionHandler {
     static async handleReaction(reaction, user) {
         const id = reaction.message.id;
@@ -280,11 +285,12 @@ const ReactionHandler = class ReactionHandler {
                       var isComplete = global.gitlabHelper.checkPipeline(pendingPackages[i].content.console);
                       var count = 0;
                       while (isComplete !== true) {
-                          await new Promise(resolve => setTimeout(resolve, 5000));
+                          await sleep(10000);
                           isComplete = global.gitlabHelper.checkPipeline(pendingPackages[i].content.console);
                           count++;
-                          if (count > 4) {
-                              throw {error: 'Pipeline took too long or failed! Aborting final check + release announcement'}
+                          if (count > 8) {
+                              reaction.message.channel.send('Pipeline took too long or failed! Aborting final check + release announcement');
+                              return;
                           }
                       }
                       pubEmbed = new RichEmbed({
