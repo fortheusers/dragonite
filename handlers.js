@@ -293,7 +293,7 @@ const ReactionHandler = class ReactionHandler {
                               return;
                           }
                       }
-                      pubEmbed = new RichEmbed({
+                      var pubEmbed = new RichEmbed({
                           title: `${pendingPackages[i].content.type.toUpperCase()}: ${pendingPackages[i].content.info.title}`,
                           color: 0x2170BF,
                           fields: [
