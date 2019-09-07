@@ -310,7 +310,7 @@ const ReactionHandler = class ReactionHandler {
                               name: 'By ' + pendingPackages[i].content.info.author
                           }
                       });
-                      client.guilds.get(config.discord.publicReleases.guild).channels.get(config.discord.publicReleases.channel).send({ pubEmbed });
+                      reaction.message.client.guilds.get(config.discord.publicReleases.guild).channels.get(config.discord.publicReleases.channel).send({ pubEmbed });
                       // reaction.message.delete();
                     } catch(err) {
                         console.log(err);
