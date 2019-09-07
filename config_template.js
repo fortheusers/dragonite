@@ -7,7 +7,9 @@ const config = {
 
     // All verification messages get sent here
     packageVerification: {channel: '', guild: ''},
-    logging: {channel: '', guild: ''}
+    logging: {channel: '', guild: ''},
+    publicReleases: {channel: '', guild: ''},
+    frontendUrl: 'http://example.com/%package%'
   },
 
   libget: {

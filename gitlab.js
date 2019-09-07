@@ -45,5 +45,16 @@ const GitlabHelper = class GitlabHelper {
         
         return this.api.Commits.create(config.gitlab.projectIDs[subpackage.console], "master", `${subpackage.type}: ${subpackage.package} (${subpackage.info.version})`, commitFiles, {author_email: "dragonite@fortheusers.org", author_name: "Dragonite Bot"});
     }
+
+    checkPipeline(repo) {
+        var allDone = true;
+        this.api.Pipelines.all(config.gitlab.projectIDs[subpackage.console]).forEach(pipe => {
+            if (pipe.status !== 'success')
+            {
+                allDone = false;
+            }
+        });
+        return allDone;
+    }
 }
 module.exports = GitlabHelper;

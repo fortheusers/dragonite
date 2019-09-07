@@ -259,7 +259,7 @@ const ReactionHandler = class ReactionHandler {
                                     }
                                     break;
                                 default:
-                                    reaction.message.send(`Error: The console ${pendingPackages[i].content.console} is not supported by Dragonite auto-manifest but no predefined SD assets exist!`);
+                                    reaction.message.channel.send(`Error: The console ${pendingPackages[i].content.console} is not supported by Dragonite auto-manifest but no predefined SD assets exist!`);
                                     return;
                             }
 
@@ -268,7 +268,7 @@ const ReactionHandler = class ReactionHandler {
                         }
 
                         if ((zipUrl === null || zipUrl == undefined) && (binUrl === null || binUrl === undefined)) {
-                            reaction.message.send('Error while trying to find a valid zip/binary asset! No assets hint they are a binary or zip.');
+                            reaction.message.channel.send('Error while trying to find a valid zip/binary asset! No assets hint they are a binary or zip.');
                             return;
                         }
                     }
@@ -277,6 +277,34 @@ const ReactionHandler = class ReactionHandler {
                       const resp = (await global.gitlabHelper.commitPackage(pendingPackages[i].content)).id;
                       embed.addField("Commit", `https://gitlab.com/4tu/dragonite-test-repo/commit/${resp}`, true);
                       reaction.message.channel.send({ embed });
+                      var isComplete = global.gitlabHelper.checkPipeline(pendingPackages[i].content.console);
+                      var count = 0;
+                      while (isComplete !== true) {
+                          await new Promise(resolve => setTimeout(resolve, 5000));
+                          isComplete = global.gitlabHelper.checkPipeline(pendingPackages[i].content.console);
+                          count++;
+                          if (count > 4) {
+                              throw {error: 'Pipeline took too long or failed! Aborting final check + release announcement'}
+                          }
+                      }
+                      pubEmbed = new RichEmbed({
+                          title: `${pendingPackages[i].content.type.toUpperCase()}: ${pendingPackages[i].content.info.title}`,
+                          color: 0x2170BF,
+                          fields: [
+                              {
+                                  name: 'Version',
+                                  value: pendingPackages[i].content.info.version
+                              },
+                              {
+                                  name: 'Link',
+                                  value: config.discord.frontendUrl.replace('%package%', pendingPackages[i].content.package)
+                              }
+                          ],
+                          author: {
+                              name: 'By ' + pendingPackages[i].content.info.author
+                          }
+                      });
+                      client.guilds.get(config.discord.publicReleases.guild).channels.get(config.discord.publicReleases.channel).send({ pubEmbed });
                       // reaction.message.delete();
                     } catch(err) {
                       reaction.message.channel.send(`Error while trying to commit to metadata repo!\n \`\`\`json\n${JSON.stringify(err, null, 1)}\`\`\``);
