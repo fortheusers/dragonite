@@ -215,20 +215,13 @@ const ReactionHandler = class ReactionHandler {
             console.log(reaction);
             if (i != -1) {
                 if (reaction.emoji.name == '✅') {
-                    reaction.message.edit({ embed: new RichEmbed({
-                        title: pendingPackages[i].content.package,
-                        color: 0x85A352,
-                        iconURL: "/tmp/tmp_embed_true.png",
-                        footer: {text: 'Package submission approved'},
-                        url: pendingPackages[i].content.info.url,
-                        fields: [
-                            {
-                                name: 'Commit',
-                                value: "TODO: fill me out after committing",
-                                inline: true
-                            }
-                        ]
-                    }), files: []});
+                    let embed = new RichEmbed({
+                      title: pendingPackages[i].content.package,
+                      color: 0x85A352,
+                      footer: {text: 'Package submission approved'},
+                      url: `https://apps.fortheusers.org/app/${pendingPackages[i].content.package}`
+                    }).setThumbnail(reaction.message.embeds.length > 0 && reaction.message.embeds[0].thumbnail.url);
+
                     var zipI = pendingPackages[i].content.assets.indexOf(a => a.type === 'zip');
                     if (zipI === -1) {
                         var gh = new GithubHelper();
@@ -236,15 +229,23 @@ const ReactionHandler = class ReactionHandler {
                         pendingPackages[i].content.assets.push({type: 'zip', url: zipUrl, zip: [{path: '/', dest:'/', type: 'update'}]});
                     }
 
-                    global.gitlabHelper.commitPackage(pendingPackages[i].content);
+                    try {
+                      const resp = (await global.gitlabHelper.commitPackage(pendingPackages[i].content)).id;
+                      embed.addField("Commit", `https://gitlab.com/4tu/dragonite-test-repo/commit/${resp}`, true);
+                      reaction.message.channel.send({ embed });
+                      reaction.message.delete();
+                    } catch(err) {
+                      reaction.message.channel.send(`Error while trying to commit to metadata repo! ${err.message}`);
+                      return;
+                    }
 
                 } else if (reaction.emoji.name == '❎') {
-                    reaction.message.edit({embed: new RichEmbed({
+                    reaction.message.delete();
+                    reaction.message.channel.send({embed: new RichEmbed({
                         title: pendingPackages[i].content.package,
                         color: 0xC73228,
                         footer: {text: 'Package submission denied'},
                         url: pendingPackages[i].content.info.url,
-                        iconURL: "/tmp/tmp_embed_true.png",
                         fields: [
                             {
                                 name: 'Contact',
@@ -252,7 +253,7 @@ const ReactionHandler = class ReactionHandler {
                                 inline: true
                             }
                         ]
-                    }), files: []});
+                    })} );
                 }
                 reaction.message.clearReactions();
                 pendingPackages.splice(i, 1);

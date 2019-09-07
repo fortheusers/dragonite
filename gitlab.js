@@ -18,7 +18,7 @@ const GitlabHelper = class GitlabHelper {
         if (subpackage.type == 'new' || subpackage.type === undefined /* In the case of no type, assume new */) { //TODO Updates
             commitJson = {package: subpackage.package, info: subpackage.info, changelog: "", assets: []};
         }
-        let commitFiles = [{action: 'create', filePath: subpackage.package + '/pkgbuild.json', content: ''}];
+        let commitFiles = [{action: 'update', filePath: subpackage.package + '/pkgbuild.json', content: ''}];
         subpackage.assets.forEach(asset => {
             switch (asset.type) { //TODO single files
                 case 'icon':
@@ -29,7 +29,7 @@ const GitlabHelper = class GitlabHelper {
                         commitJson.assets.push({url: asset.data, type: asset.type});
                     }else if (asset.format == 'base64') {
                         commitJson.assets.push({url: asset.type + '.png', type: asset.type});
-                        commitFiles.push({action: 'create', filePath: subpackage.package + '/' + asset.type + '.png', encoding: 'base64', content: asset.data.substr(22)});
+                        commitFiles.push({action: 'update', filePath: subpackage.package + '/' + asset.type + '.png', encoding: 'base64', content: asset.data.substr(22)});
                     }
                     break;
                 case 'zip':
@@ -37,9 +37,9 @@ const GitlabHelper = class GitlabHelper {
                     break;
             }
         });
-        commitFiles[0].content = JSON.stringify(commitJson);
+        commitFiles[0].content = JSON.stringify(commitJson, null, 1);
         
-        this.api.Commits.create(config.gitlab.projectIDs[0], "master", `${subpackage.type}: ${subpackage.package} (${subpackage.info.version})`, commitFiles);
+        return this.api.Commits.create(config.gitlab.projectIDs[0], "master", `${subpackage.type}: ${subpackage.package} (${subpackage.info.version})`, commitFiles);
     }
 }
 module.exports = GitlabHelper;
