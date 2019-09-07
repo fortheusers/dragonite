@@ -48,7 +48,7 @@ const GitlabHelper = class GitlabHelper {
 
     checkPipeline(repo) {
         var allDone = true;
-        this.api.Pipelines.all(config.gitlab.projectIDs[subpackage.console]).forEach(pipe => {
+        this.api.Pipelines.all(config.gitlab.projectIDs[repo]).forEach(pipe => {
             if (pipe.status !== 'success')
             {
                 allDone = false;
