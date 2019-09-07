@@ -184,7 +184,7 @@ const EndpointHandler = class EndpointHandler{
                             }
                         }
                     }
-                    embed.addField('Assets', txt || "TODO: actually let them specify assets");
+                    embed.addField('Assets', txt || "Fetch SD-ready zip from latest Github release");
                 }
                 client.guilds.get(config.discord.packageVerification.guild).channels.get(config.discord.packageVerification.channel).send({embed, files}).then(msg => {
                     pendingPackages.push({id: msg.id, content: reqFormat});
@@ -226,14 +226,14 @@ const ReactionHandler = class ReactionHandler {
                     if (zipI === -1) {
                         var gh = new GithubHelper();
                         var zipUrl = await gh.getRelease(pendingPackages[i].content.info.url, '.zip');
-                        pendingPackages[i].content.assets.push({type: 'zip', url: zipUrl, zip: [{path: '/', dest:'/', type: 'update'}]});
+                        pendingPackages[i].content.assets.push({type: 'zip', url: zipUrl, zip: [{path: '/**', dest:'/', type: 'update'}]});
                     }
 
                     try {
                       const resp = (await global.gitlabHelper.commitPackage(pendingPackages[i].content)).id;
                       embed.addField("Commit", `https://gitlab.com/4tu/dragonite-test-repo/commit/${resp}`, true);
                       reaction.message.channel.send({ embed });
-                      reaction.message.delete();
+                      // reaction.message.delete();
                     } catch(err) {
                       reaction.message.channel.send(`Error while trying to commit to metadata repo! ${err.message}`);
                       return;
