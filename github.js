@@ -45,7 +45,7 @@ const GithubHelper = class GithubHelper {
         if (extension == null) {
             return latestRelease.assets[0].browser_download_url;
         } else {
-            return latestRelease.assets.find(a => a.name.endsWith(extension));
+            return latestRelease.assets.find(a => a.name.endsWith(extension)).browser_download_url;
         }
     }
 }
