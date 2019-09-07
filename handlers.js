@@ -226,7 +226,18 @@ const ReactionHandler = class ReactionHandler {
                     var binI = pendingPackages[i].content.assets.indexOf(a => a.format !== 'base64' && (a.data.endsWith('.nro') || a.data.endsWith('.rpx') || a.data.endsWith('.elf')));
                     if (zipI === -1 && binI === -1) {
                         var gh = new GithubHelper();
-                        var zipUrl = await gh.getRelease(pendingPackages[i].content.info.url, '.zip');
+                        var zipUrls = await gh.getReleases(pendingPackages[i].content.info.url, '.zip');
+                        var zipUrl;
+                        if (zipUrls !== undefined && zipUrls.length > 1) {
+                            zipUrl = zipUrls.find(a => a.name.includes(pendingPackages[i].content.console));
+                            if (zipUrl !== undefined)
+                            {
+                                zipUrl = zipUrl.browser_download_url;
+                            }
+                        }else if (zipUrls !== undefined && zipUrls.length > 0) {
+                            zipUrl = zipUrls[0].browser_download_url;
+                        }
+
                         var binUrl;
                         if (zipUrl === null || zipUrl === undefined || zipUrl === '') {
                             switch (pendingPackages[i].content.console) {
@@ -246,6 +257,7 @@ const ReactionHandler = class ReactionHandler {
                                     if (binUrl !== null && binUrl !== undefined) {
                                         pendingPackages[i].content.assets.push({type: 'update', url: binUrl, dest: `/wiiu/apps${pendingPackages[i].content.package}/${pendingPackages[i].content.package}${ext}`});
                                     }
+                                    break;
                                 default:
                                     reaction.message.send(`Error: The console ${pendingPackages[i].content.console} is not supported by Dragonite auto-manifest but no predefined SD assets exist!`);
                                     return;

@@ -51,6 +51,28 @@ const GithubHelper = class GithubHelper {
             }
         }
     }
+
+    async getReleases(url, extension = null) {
+        let parsedUrl = new URL(url).pathname;
+        parsedUrl = parsedUrl.split('/');
+        const user = parsedUrl[1];
+        const repo = parsedUrl[2];
+        const latestReleases = await this.octokit.repos.listReleases({owner: user, repo: repo});
+        if (latestReleases.status != 200) throw {status: latestReleases.status, url: url};
+        const latestRelease = latestReleases.data[0];
+        if (latestRelease === undefined || latestRelease.length == 0) {
+            console.warn(`Repo ${repo} found to have no releases`);
+            return;
+        }
+        if (extension == null) {
+            return latestRelease.assets;
+        } else {
+            var a = latestRelease.assets.filter(a => a.name.endsWith(extension));
+            if (a !== null && a !== undefined) {
+                return a;
+            }
+        }
+    }
 }
 
 module.exports = GithubHelper;
