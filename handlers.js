@@ -233,16 +233,18 @@ const ReactionHandler = class ReactionHandler {
                                 case 'switch':
                                     binUrl = await gh.getRelease(pendingPackages[i].content.info.url, '.nro');
                                     if (binUrl !== null && binUrl !== undefined) {
-                                        pendingPackages[i].content.assets.push({type: 'update', url: binUrl, dest: '/switch/'+pendingPackages[i].content.package+'/'});
+                                        pendingPackages[i].content.assets.push({type: 'update', url: binUrl, dest: `/switch/${pendingPackages[i].content.package}/${pendingPackages[i].content.package}.nro`});
                                     }
                                     break;
                                 case 'wiiu':
                                     binUrl = await gh.getRelease(pendingPackages[i].content.info.url, '.rpx');
+                                    var ext = '.rpx';
                                     if (binUrl === null || binUrl === undefined) {
                                         binUrl = await gh.getRelease(pendingPackages[i].content.info.url, '.elf');
+                                        ext = '.elf';
                                     }
                                     if (binUrl !== null && binUrl !== undefined) {
-                                        pendingPackages[i].content.assets.push({type: 'update', url: binUrl, dest: '/wiiu/apps'+pendingPackages[i].content.package+'/'});
+                                        pendingPackages[i].content.assets.push({type: 'update', url: binUrl, dest: `/wiiu/apps${pendingPackages[i].content.package}/${pendingPackages[i].content.package}${ext}`});
                                     }
                                 default:
                                     reaction.message.send(`Error: The console ${pendingPackages[i].content.console} is not supported by Dragonite auto-manifest but no predefined SD assets exist!`);
