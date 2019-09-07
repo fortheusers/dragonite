@@ -23,6 +23,7 @@ const GitlabHelper = class GitlabHelper {
             switch (asset.type) { //TODO single files
                 case 'icon':
                 case 'screen':
+                case 'screenshot':
                     if (asset.format == 'url')
                     {
                         commitJson.assets.push({url: asset.data, type: asset.type});
