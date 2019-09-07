@@ -47,15 +47,8 @@ const GitlabHelper = class GitlabHelper {
     }
 
     async checkPipeline(repo) {
-        var allDone = true;
-        var pipes = await this.api.Pipelines.all(config.gitlab.projectIDs[repo])
-        pipes.forEach(pipe => {
-            if (pipe.status !== 'success')
-            {
-                allDone = false;
-            }
-        });
-        return allDone;
+        var pipes = await this.api.Pipelines.all(config.gitlab.projectIDs[repo]);
+        return pipes[0].status === 'success';
     }
 }
 module.exports = GitlabHelper;
