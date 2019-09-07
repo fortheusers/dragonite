@@ -20,7 +20,7 @@ const GitlabHelper = class GitlabHelper {
         }
         let commitFiles = [{action: 'create', filePath: subpackage.package + '/pkgbuild.json', content: ''}];
         subpackage.assets.forEach(asset => {
-            switch (asset.type) { //TODO single files
+            switch (asset.type) {
                 case 'icon':
                 case 'screen':
                 case 'screenshot':
@@ -33,6 +33,10 @@ const GitlabHelper = class GitlabHelper {
                     }
                     break;
                 case 'zip':
+                case 'update':
+                case 'get':
+                case 'local':
+                case 'extract':
                     commitJson.assets.push(asset);
                     break;
             }

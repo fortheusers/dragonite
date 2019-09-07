@@ -223,10 +223,40 @@ const ReactionHandler = class ReactionHandler {
                     }).setThumbnail(reaction.message.embeds.length > 0 && reaction.message.embeds[0].thumbnail.url);
 
                     var zipI = pendingPackages[i].content.assets.indexOf(a => a.type === 'zip');
-                    if (zipI === -1) {
+                    var binI = pendingPackages[i].content.assets.indexOf(a => a.format !== 'base64' && (a.data.endsWith('.nro') || a.data.endsWith('.rpx') || a.data.endsWith('.elf')));
+                    if (zipI === -1 && binI === -1) {
                         var gh = new GithubHelper();
                         var zipUrl = await gh.getRelease(pendingPackages[i].content.info.url, '.zip');
-                        pendingPackages[i].content.assets.push({type: 'zip', url: zipUrl, zip: [{path: '/**', dest:'/', type: 'update'}]});
+                        var binUrl;
+                        if (zipUrl === null || zipUrl === undefined || zipUrl === '') {
+                            switch (pendingPackages[i].content.console) {
+                                case 'switch':
+                                    binUrl = await gh.getRelease(pendingPackages[i].content.info.url, '.nro');
+                                    if (binUrl !== null && binUrl !== undefined) {
+                                        pendingPackages[i].content.assets.push({type: 'update', url: binUrl, dest: '/switch/'+pendingPackages[i].content.package+'/'});
+                                    }
+                                    break;
+                                case 'wiiu':
+                                    binUrl = await gh.getRelease(pendingPackages[i].content.info.url, '.rpx');
+                                    if (binUrl === null || binUrl === undefined) {
+                                        binUrl = await gh.getRelease(pendingPackages[i].content.info.url, '.elf');
+                                    }
+                                    if (binUrl !== null && binUrl !== undefined) {
+                                        pendingPackages[i].content.assets.push({type: 'update', url: binUrl, dest: '/wiiu/apps'+pendingPackages[i].content.package+'/'});
+                                    }
+                                default:
+                                    reaction.message.send(`Error: The console ${pendingPackages[i].content.console} is not supported by Dragonite auto-manifest but no predefined SD assets exist!`);
+                                    return;
+                            }
+
+                        } else {
+                            pendingPackages[i].content.assets.push({type: 'zip', url: zipUrl, zip: [{path: '/**', dest:'/', type: 'update'}]});
+                        }
+
+                        if ((zipUrl === null || zipUrl == undefined) && (binUrl === null || binUrl === undefined)) {
+                            reaction.message.send('Error while trying to find a valid zip/binary asset! No assets hint they are a binary or zip.');
+                            return;
+                        }
                     }
 
                     try {
