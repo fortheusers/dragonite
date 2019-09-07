@@ -136,7 +136,7 @@ const EndpointHandler = class EndpointHandler{
                     fields: [
                         {
                             name: 'Package',
-                            value: reqFormat.package.replace(/[^\w.-]+/g, ""), // TODO: check no collisions
+                            value: reqFormat.package.replace(/[^a-z0-9]/gi, ''), // TODO: check no collisions
                             inline: true
                         }
                     ]
