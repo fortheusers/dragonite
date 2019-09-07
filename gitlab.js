@@ -15,7 +15,7 @@ const GitlabHelper = class GitlabHelper {
 
     commitPackage(subpackage) {
         var commitJson;
-        if (subpackage.type == 'new') { //TODO Updates
+        if (subpackage.type == 'new' || subpackage.type === undefined /* In the case of no type, assume new */) { //TODO Updates
             commitJson = {package: subpackage.package, info: subpackage.info, changelog: "", assets: []};
         }
         let commitFiles = [{action: 'create', filePath: subpackage.package + '/pkgbuild.json', content: ''}];
@@ -30,8 +30,10 @@ const GitlabHelper = class GitlabHelper {
                         commitJson.assets.push({url: asset.type + '.png', type: asset.type});
                         commitFiles.push({action: 'create', filePath: subpackage.package + '/' + asset.type + '.png', encoding: 'base64', content: asset.data});
                     }
+                    break;
                 case 'zip':
                     commitJson.assets.push(asset);
+                    break;
             }
         });
         commitFiles[0].content = JSON.stringify(commitJson);
