@@ -313,7 +313,12 @@ const ReactionHandler = class ReactionHandler {
                       client.guilds.get(config.discord.publicReleases.guild).channels.get(config.discord.publicReleases.channel).send({ pubEmbed });
                       // reaction.message.delete();
                     } catch(err) {
-                      reaction.message.channel.send(`Error while trying to commit to metadata repo!\n \`\`\`json\n${JSON.stringify(err, null, 1)}\`\`\``);
+                      if (JSON.stringify(err) === {}) {
+                          reaction.message.channel.send(err);
+                          console.log(err);
+                      }else {
+                        reaction.message.channel.send(`Error while trying to commit to metadata repo!\n \`\`\`json\n${JSON.stringify(err, null, 1)}\`\`\``);
+                      }
                       return;
                     }
 
