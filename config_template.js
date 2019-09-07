@@ -24,7 +24,7 @@ const config = {
     },
 
     // the project to commit to upon submission approval (lines up with get repo)
-    projectIDs: {test: '12759473'}
+    projectIDs: {wiiu: '12759473', switch: '12759473'}
   },
 
   github: {
