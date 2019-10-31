@@ -121,8 +121,8 @@ const commands = {
                                     toleranceCount = 0;
                                 }, e => {
                                     if (e.status != 200 && !giveup) {
-                                        msg.channel.send('Github responded with status `' + e.status + '` while checking <' + e.url + '>');
                                         msg.channel.send(package.name);
+                                        msg.channel.send('Github responded with status `' + e.status + '` while checking <' + e.url + '>');
                                         toleranceCount++;
                                         if (toleranceCount >= config.libget.toleranceMax) {
                                             msg.reply(`Gave up checking repos for updates in get repo ${repo} after ${config.libget.toleranceMax} attempts!`);
@@ -132,6 +132,7 @@ const commands = {
                                 });
                             }
                         }
+                        msg.channel.send('Checking Complete!');
                     });
                     response.on('error', e => {
                         msg.reply(`Error occured while getting repo json, ${e.name}: ${e.message}`);
