@@ -121,7 +121,8 @@ const commands = {
                                     toleranceCount = 0;
                                 }, e => {
                                     if (e.status != 200 && !giveup) {
-                                        msg.channel.send('Github responded with status `' + e.status + '` while checking <' + e.name + '>');
+                                        msg.channel.send('Github responded with status `' + e.status + '` while checking <' + e.url + '>');
+                                        msg.channel.send(package.name);
                                         toleranceCount++;
                                         if (toleranceCount >= config.libget.toleranceMax) {
                                             msg.reply(`Gave up checking repos for updates in get repo ${repo} after ${config.libget.toleranceMax} attempts!`);
