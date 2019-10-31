@@ -132,7 +132,6 @@ const commands = {
                                 });
                             }
                         }
-                        msg.channel.send('Checking Complete!');
                     });
                     response.on('error', e => {
                         msg.reply(`Error occured while getting repo json, ${e.name}: ${e.message}`);
@@ -140,6 +139,7 @@ const commands = {
                 });
             }
         }
+        msg.channel.send('Checking Complete!');
     },
     "test": {
         requiredPermissions: ['BAN_MEMBERS'],
