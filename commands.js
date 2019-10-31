@@ -139,7 +139,6 @@ const commands = {
                 });
             }
         }
-        msg.channel.send('Checking Complete!');
     },
     "test": {
         requiredPermissions: ['BAN_MEMBERS'],
