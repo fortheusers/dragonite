@@ -69,7 +69,7 @@ const commands = {
                             (pkg.details && pkg.details.toLowerCase().includes(query)) ||
                             (pkg.description && pkg.description.toLowerCase().includes(query));
                     });
-                    const res2 = res.map(p => `[${p.title}](https://apps.fortheusers.org/app/${p.name}) by ${p.author} / ${p.description}`);
+                    const res2 = res.map(p => `[${p.title}](https://apps.fortheusers.org/switch/${p.name}) by ${p.author} / ${p.description}`);
                     res2.length = 10;
                     const blurb = new RichEmbed({
                         color: 0x2277aa,
