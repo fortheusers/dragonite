@@ -158,7 +158,7 @@ async function sleep(ms)
 const ReactionHandler = class ReactionHandler {
     static async handleReaction(reaction, user) {
         const id = reaction.message.id;
-        if (reaction.me) {
+        if (reaction.me && reaction.users.some(user => user.id !== reaction.message.author.id)) {
             const submission = dtb.getPendingPackageByDiscordID(id);
             if (submission !== undefined) {
                 //console.log(reaction);
