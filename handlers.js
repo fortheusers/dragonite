@@ -57,10 +57,10 @@ const MessageHandler = class MessageHandler{
 
 const EndpointHandler = class EndpointHandler{
     constructor(client, port, gitlab) {
-    this.app = express();
-    this.app.use(cors());
-    this.app.use(express.json({limit: '15mb'}));
-    
+        this.app = express();
+        this.app.use(cors());
+        this.app.use(express.json({limit: '15mb'}));
+
         this.port = port;
         this.app.use('/img/hey.gif', express.static('hey.gif'));
         this.app.get('/', (req, res) => {
@@ -122,7 +122,7 @@ const EndpointHandler = class EndpointHandler{
         });
 
         this.app.post('/package', (req, res) => {
-	    res.header("Access-Control-Allow-Origin", "*");
+            res.header("Access-Control-Allow-Origin", "*");
             res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
 
             const ip = req.headers['x-real-ip'] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
@@ -146,7 +146,7 @@ const EndpointHandler = class EndpointHandler{
                 if (reqFormat.info.author) embed.addField('Author', reqFormat.info.author, true);
                 if (reqFormat.info.version) embed.addField('Version', reqFormat.info.version, true);
                 if (reqFormat.info.url) embed.addField('URL', reqFormat.info.url, true);
-                
+
                 if (reqFormat.info.description) embed.addField('Description', reqFormat.info.description);
 
                 if (reqFormat.info.category) embed.addField('Category', reqFormat.info.category, true);
@@ -192,11 +192,11 @@ const EndpointHandler = class EndpointHandler{
                     msg.react('❎');
                     client.guilds.get(config.discord.logging.guild).channels.get(config.discord.logging.channel).send({embed, files});
                 });
-		console.log("submission received");
+                console.log("submission received");
                 res.status(200).end();
             } catch (e) {
-		console.log("error with submission");
-		console.log(`${e.name} - ${e.message}`);
+                console.log("error with submission");
+                console.log(`${e.name} - ${e.message}`);
                 res.status(400).send({error: e.name, message: e.message}).end();
                 return;
             }
