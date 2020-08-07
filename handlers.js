@@ -146,6 +146,14 @@ const EndpointHandler = class EndpointHandler{
                 return;
             }
         });
+
+        this.app.get('/qa/packages', (req, res) => {
+            const submissions = dtb.getAllPendingPackages();
+            res.status(200);
+            res.json(submissions);
+            res.end();
+        });
+
         this.app.listen(this.port, () => console.log(`✅ [Submissions] Endpoint HTTP handler listening on port ${this.port}!`));
     }
 }
