@@ -31,7 +31,7 @@ async getGitHubRelease() {
 
     const hasGoodAsset = this.pkg.assets.some(asset =>
         asset.type === 'zip' ||
-        extensions[this.pkg.console].some(ext =>
+        consoleExtensions.some(ext =>
             asset.data.endsWith(ext)
         )
     );
