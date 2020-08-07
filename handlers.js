@@ -7,6 +7,7 @@ const fs = require('fs');
 const geoip  = require('geoip-lite');
 var AdmZip = require('adm-zip');
 const GithubHelper = require('./github');
+const Submission = require('./submission');
 
 const convertb64AndSetEmbed = (embed, data, val, files) => {
     let base64Image = data.split(';base64,').pop();
@@ -128,8 +129,9 @@ const EndpointHandler = class EndpointHandler{
             const ip = req.headers['x-real-ip'] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
             const geoness = geoip.lookup(ip);
 
-            let reqFormat = req.body;
-            reqFormat.package = reqFormat.package.replace(/[^a-z0-9]/gi, '');
+            let submission = new Submission(req.body);
+            submission.pkg.package = submission.pkg.package.replace(/[^a-z0-9]/gi, '');
+            let reqFormat = submission.pkg;
             try {
                 let embed = new RichEmbed({
                     title: 'Package submission received',
@@ -187,10 +189,11 @@ const EndpointHandler = class EndpointHandler{
                     embed.addField('Assets', txt || "Fetch SD-ready zip from latest Github release");
                 }
                 client.guilds.get(config.discord.packageVerification.guild).channels.get(config.discord.packageVerification.channel).send({embed, files}).then(msg => {
-                    pendingPackages.push({id: msg.id, content: reqFormat});
+                    //pendingPackages.push({id: msg.id, content: reqFormat});
+                    submission.setDiscord(msg.id);
+                    dtb.pushPendingPackage(submission);
                     msg.react('✅');
                     msg.react('❎');
-                    client.guilds.get(config.discord.logging.guild).channels.get(config.discord.logging.channel).send({embed, files});
                 });
                 console.log("submission received");
                 res.status(200).end();
@@ -214,132 +217,94 @@ const ReactionHandler = class ReactionHandler {
     static async handleReaction(reaction, user) {
         const id = reaction.message.id;
         if (reaction.users.size == 2) {
-            const i = pendingPackages.findIndex(a => {
-                return a.id == id;
-            });
-            console.log(reaction);
-            if (i != -1) {
+            const submission = dtb.getPendingPackageByDiscordID(id);
+            if (submission !== undefined) {
+                console.log(reaction);
+
                 if (reaction.emoji.name == '✅') {
+                    let frontendUrl = config.discord.frontendUrl;
+                    if (frontendUrl === undefined) {
+                        frontendUrl = "https://apps.fortheusers.org/app/%package%";
+                    }
+
                     let embed = new RichEmbed({
-                      title: pendingPackages[i].content.package,
-                      color: 0x85A352,
-                      footer: {text: 'Package submission approved'},
-                      url: `https://apps.fortheusers.org/app/${pendingPackages[i].content.package}`
-                    }).setThumbnail(reaction.message.embeds.length > 0 && reaction.message.embeds[0].thumbnail.url);
-
-                    var zipI = pendingPackages[i].content.assets.indexOf(a => a.type === 'zip');
-                    var binI = pendingPackages[i].content.assets.indexOf(a => a.format !== 'base64' && (a.data.endsWith('.nro') || a.data.endsWith('.rpx') || a.data.endsWith('.elf')));
-                    if (zipI === -1 && binI === -1) {
-                        var gh = new GithubHelper();
-                        var zipUrls = await gh.getReleases(pendingPackages[i].content.info.url, '.zip');
-                        var zipUrl;
-                        if (zipUrls !== undefined && zipUrls.length > 1) {
-                            zipUrl = zipUrls.find(a => a.name.includes(pendingPackages[i].content.console));
-                            if (zipUrl !== undefined)
-                            {
-                                zipUrl = zipUrl.browser_download_url;
-                            }
-                        }else if (zipUrls !== undefined && zipUrls.length > 0) {
-                            zipUrl = zipUrls[0].browser_download_url;
-                        }
-
-                        var binUrl;
-                        if (zipUrl === null || zipUrl === undefined || zipUrl === '') {
-                            switch (pendingPackages[i].content.console) {
-                                case 'switch':
-                                    binUrl = await gh.getRelease(pendingPackages[i].content.info.url, '.nro');
-                                    if (binUrl !== null && binUrl !== undefined) {
-                                        pendingPackages[i].content.assets.push({type: 'update', url: binUrl, dest: `/switch/${pendingPackages[i].content.package}/${pendingPackages[i].content.package}.nro`});
-                                    }
-                                    break;
-                                case 'wiiu':
-                                    binUrl = await gh.getRelease(pendingPackages[i].content.info.url, '.rpx');
-                                    var ext = '.rpx';
-                                    if (binUrl === null || binUrl === undefined) {
-                                        binUrl = await gh.getRelease(pendingPackages[i].content.info.url, '.elf');
-                                        ext = '.elf';
-                                    }
-                                    if (binUrl !== null && binUrl !== undefined) {
-                                        pendingPackages[i].content.assets.push({type: 'update', url: binUrl, dest: `/wiiu/apps${pendingPackages[i].content.package}/${pendingPackages[i].content.package}${ext}`});
-                                    }
-                                    break;
-                                default:
-                                    reaction.message.channel.send(`Error: The console ${pendingPackages[i].content.console} is not supported by Dragonite auto-manifest but no predefined SD assets exist!`);
-                                    return;
-                            }
-
-                        } else {
-                            pendingPackages[i].content.assets.push({type: 'zip', url: zipUrl, zip: [{path: '/**', dest:'/', type: 'update'}]});
-                        }
-
-                        if ((zipUrl === null || zipUrl == undefined) && (binUrl === null || binUrl === undefined)) {
-                            reaction.message.channel.send('Error while trying to find a valid zip/binary asset! No assets hint they are a binary or zip.');
-                            return;
-                        }
+                      title: submission.pkg.package,
+                      color: 0xc99203,
+                      footer: {text: 'Processing approved submission...'},
+                      url: frontendUrl.replace('%package%', submission.pkg.package)
+                    })
+                    if (reaction.message.embeds.length > 0 &&
+                        reaction.message.embeds[0].thumbnail) {
+                        embed.setThumbnail(reaction.message.embeds[0].thumbnail.url);
                     }
 
                     try {
-                      const resp = (await global.gitlabHelper.commitPackage(pendingPackages[i].content)).id;
+                        await submission.getGitHubRelease();
+                    } catch(e) {
+                        reaction.message.channel.send(e.toString());
+                    }
+
+                    try {
+                      const resp = (await global.gitlabHelper.commitPackage(submission.pkg)).id;
                       embed.addField("Commit", `https://gitlab.com/4tu/dragonite-test-repo/commit/${resp}`, true);
-                      reaction.message.channel.send({ embed });
-                      await sleep(10000);
-                      var isComplete = await global.gitlabHelper.checkPipeline(pendingPackages[i].content.console);
-                      var count = 0;
-                      while (isComplete !== true) {
-                          await sleep(10000);
-                          isComplete = await global.gitlabHelper.checkPipeline(pendingPackages[i].content.console);
-                          count++;
-                          if (count > 8) {
-                              reaction.message.channel.send('Pipeline took too long or failed! Aborting final check + release announcement');
-                              return;
-                          }
-                      }
+                      const status_msg = reaction.message.channel.send({ embed });
+
+                      /*while (!await global.gitlabHelper.checkPipeline(submission.pkg.console)) {
+                          await sleep(3000);
+                      }*/
+
+                      embed.setColor(0x85A352);
+                      embed.setFooter('Package submission approved');
+                      status_msg.then(function(msg) {
+                          msg.edit({ embed });
+                      });
+
                       var pubEmbed = new RichEmbed({
-                          title: `${pendingPackages[i].content.type.toUpperCase()}: ${pendingPackages[i].content.info.title}`,
+                          title: `${submission.pkg.type.toUpperCase()}: ${submission.pkg.info.title}`,
                           color: 0x2170BF,
                           fields: [
                               {
                                   name: 'Version',
-                                  value: pendingPackages[i].content.info.version
+                                  value: submission.pkg.info.version
                               },
                               {
                                   name: 'Link',
-                                  value: config.discord.frontendUrl.replace('%package%', pendingPackages[i].content.package)
+                                  value: frontendUrl.replace('%package%', submission.pkg.package)
                               }
                           ],
                           author: {
-                              name: 'By ' + pendingPackages[i].content.info.author
+                              name: 'By ' + submission.pkg.info.author
                           }
                       });
                       reaction.message.client.guilds.get(config.discord.publicReleases.guild).channels.get(config.discord.publicReleases.channel).send({embed: pubEmbed });
                       // reaction.message.delete();
                     } catch(err) {
                         console.log(err);
-                        reaction.message.channel.send(`Error while trying to commit to metadata repo!\n \`\`\`json\n${JSON.stringify(err, null, 1)}\`\`\``);
+                        reaction.message.channel.send(`Error while trying to commit to metadata repo!\n \`\`\`json\n${err}\`\`\``);
                         return;
                     }
 
                 } else if (reaction.emoji.name == '❎') {
                     reaction.message.delete();
                     reaction.message.channel.send({embed: new RichEmbed({
-                        title: pendingPackages[i].content.package,
+                        title: submission.pkg.content.package,
                         color: 0xC73228,
                         footer: {text: 'Package submission denied'},
-                        url: pendingPackages[i].content.info.url,
+                        url: submission.pkg.info.url,
                         fields: [
                             {
                                 name: 'Contact',
-                                value: pendingPackages[i].content.submitter,
+                                value: submission.pkg.submitter,
                                 inline: true
                             }
                         ]
                     })} );
                 }
                 reaction.message.clearReactions();
-                pendingPackages.splice(i, 1);
+                dtb.removePendingPackage(submission.uuid);
             }
         }
-        return pendingPackages;
+        return;
     }
 }
 

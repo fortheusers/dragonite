@@ -3,15 +3,44 @@ const FileSync = require('lowdb/adapters/FileSync');
 const crypto = require('crypto');
 const moment = require('moment');
 var config = require("./config.js");
+const Submission = require('./submission');
 
 const Database = class Database {
     constructor() {
         const adapter = new FileSync('db.json');
         this.db = low(adapter);
-        this.db.defaults({ packageOwnership: [], bans: [], meta: [] })
+        this.db.defaults({ packageOwnership: [], bans: [], meta: [], pendingPackages: [] })
             .write();
         this.db.read();
-        console.log(`✅ [Database] Lowdb database running with ${this.db.get('packageOwnership').size()} users!`);
+        console.log(`✅ [Database] Lowdb database running with ${this.db.get('packageOwnership').size()} users, ${this.db.get('pendingPackages').size()} packages pending`);
+    }
+
+    pushPendingPackage(submission) {
+        let existingEntry = this.db.get('pendingPackages').find({uuid: submission.uuid}).value();
+        if (existingEntry === undefined) {
+            this.db.get('pendingPackages').push({
+                uuid: submission.uuid,
+                discord_id: submission.discord_id,
+                pkg: submission.pkg
+            }).write();
+        } else {
+            throw new Error("Package already pending in database!");
+        }
+        console.log(`woop ${existingEntry}`);
+    }
+
+    getPendingPackageByDiscordID(discord_id) {
+        const pkg = this.db.get('pendingPackages').find({
+            discord_id: discord_id,
+        }).value();
+        if (pkg === undefined) return undefined;
+        return new Submission(pkg.pkg, pkg.uuid, pkg.discord_id);
+    }
+
+    removePendingPackage(uuid) {
+        this.db.get('pendingPackages').remove({
+            uuid: uuid,
+        }).write();
     }
 
     pushPackage(packageName, getuuid) {

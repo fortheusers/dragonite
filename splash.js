@@ -26,6 +26,16 @@ const showSplash = () => {
   else
       console.log("❌ [Approvals] Missing Discord BOT token in config")
 
+  if (config.discord.packageVerification)
+      console.log("✅ [Approvals] Discord verification channel present")
+  else
+      console.log("❌ [Approvals] Missing packageVerification channel in config")
+
+  if (config.discord.publicReleases)
+      console.log("✅ [Approvals] Discord announcement channel present")
+  else
+      console.log("❌ [Approvals] Missing publicReleases channel in config")
+
   // Check SSH
   if (config.ssh.user && config.ssh.server)
       console.log("✅ [Management] Remote details present, ready to connect to SSH server")
