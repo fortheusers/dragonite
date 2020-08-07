@@ -8,7 +8,6 @@ constructor(pkg, uuid, msgid) {
     if (uuid) {
         this.uuid = uuid;
     } else {
-        console.log(`bad uuid ${JSON.stringify(uuid)}`)
         this.uuid = uuidv4();
     }
     this.discord_id = msgid;

@@ -26,7 +26,6 @@ const Database = class Database {
         } else {
             throw new Error("Package already pending in database!");
         }
-        console.log(`woop ${existingEntry}`);
     }
 
     getPendingPackageByDiscordID(discord_id) {

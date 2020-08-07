@@ -195,7 +195,7 @@ const EndpointHandler = class EndpointHandler{
                     msg.react('✅');
                     msg.react('❎');
                 });
-                console.log("submission received");
+                console.log(`[Approval] Submission received ${reqFormat.package}`);
                 res.status(200).end();
             } catch (e) {
                 console.log("error with submission");
