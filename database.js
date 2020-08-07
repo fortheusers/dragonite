@@ -28,6 +28,14 @@ const Database = class Database {
         }
     }
 
+    getAllPendingPackages() {
+        const dbSubmissions = this.db.get('pendingPackages').value();
+        const submissions = dbSubmissions.map(pkg =>
+            new Submission(pkg.pkg, pkg.uuid, pkg.discord_id)
+        );
+        return submissions;
+    }
+
     getPendingPackageByDiscordID(discord_id) {
         const pkg = this.db.get('pendingPackages').find({
             discord_id: discord_id,

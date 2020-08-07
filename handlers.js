@@ -3,25 +3,11 @@ const commands = require('./commands');
 const express = require('express');
 const cors = require('cors');
 const {discord, RichEmbed} = require('discord.js');
-const fs = require('fs');
-const geoip  = require('geoip-lite');
+const discordutils = require('./discordutils')
+
 var AdmZip = require('adm-zip');
 const GithubHelper = require('./github');
 const Submission = require('./submission');
-
-const convertb64AndSetEmbed = (embed, data, val, files) => {
-    let base64Image = data.split(';base64,').pop();
-    const name = `tmp_embed_${val}.png`;
-    const path = `/tmp/${name}`;
-    const attachPath = `attachment://${name}`;
-    fs.writeFileSync(path, base64Image, {encoding: 'base64'});
-    files.push({"attachment": path, name})
-
-    if (val)
-        embed.setThumbnail(attachPath);
-    else
-        embed.setImage(attachPath);
-};
 
 const MessageHandler = class MessageHandler{
     handleCommand(msg) {
@@ -122,80 +108,36 @@ const EndpointHandler = class EndpointHandler{
             res.end();
         });
 
-        this.app.post('/package', (req, res) => {
+        this.app.post('/package', async (req, res) => {
             res.header("Access-Control-Allow-Origin", "*");
             res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
 
+            const verifChannel = client
+                .guilds.get(config.discord.packageVerification.guild)
+                .channels.get(config.discord.packageVerification.channel);
+
             const ip = req.headers['x-real-ip'] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
-            const geoness = geoip.lookup(ip);
 
             let submission = new Submission(req.body);
             submission.pkg.package = submission.pkg.package.replace(/[^a-z0-9]/gi, '');
-            let reqFormat = submission.pkg;
+
             try {
-                let embed = new RichEmbed({
-                    title: 'Package submission received',
-                    color: 0x2170BF,
-                    fields: [
-                        {
-                            name: 'Package',
-                            value: reqFormat.package, // TODO: check no collisions
-                            inline: true
-                        }
-                    ]
-                });
-                if (reqFormat.info.title) embed.addField('Title', reqFormat.info.title, true);
-                if (reqFormat.info.author) embed.addField('Author', reqFormat.info.author, true);
-                if (reqFormat.info.version) embed.addField('Version', reqFormat.info.version, true);
-                if (reqFormat.info.url) embed.addField('URL', reqFormat.info.url, true);
+                await submission.getGitHubRelease();
+            } catch(e) {
+                verifChannel.send(`Couldn't fetch GitHub assets for incoming package ${submission.pkg.package} - ${e.toString()}`);
+            }
 
-                if (reqFormat.info.description) embed.addField('Description', reqFormat.info.description);
+            try {
+                let embed = discordutils.makeSubmissionEmbed(submission, ip);
 
-                if (reqFormat.info.category) embed.addField('Category', reqFormat.info.category, true);
-                if (reqFormat.info.license) embed.addField('License', reqFormat.info.license, true);
-                if (reqFormat.console) embed.addField('Console', reqFormat.console, true);
-                if (reqFormat.submitter) embed.addField('Contact', reqFormat.submitter, true);
-                if (ip) embed.addField('IP', ip, true);
-                if (geoness && geoness.timezone) embed.addField('Location', geoness.timezone, true);
-
-                if (reqFormat.info.details) embed.addField('Details', reqFormat.info.details.replace(/\\n/g, '\n'));
-                const files = [];
-                if (reqFormat.assets && reqFormat.assets.length > 0) {
-                    let txt = '';
-                    for (let asset of reqFormat.assets) {
-                        if (asset.type) {
-                            switch (asset.type) {
-                                case 'icon':
-                                    if (asset.format && asset.format == 'url') embed.setThumbnail(asset.data);
-                                    if (asset.format && asset.format == 'base64') convertb64AndSetEmbed(embed, asset.data, true, files);
-                                    break;
-                                case 'screen':
-                                case 'screenshot':
-                                    if (asset.format && asset.format == 'url') embed.setImage(asset.data);
-                                    if (asset.format && asset.format == 'base64') convertb64AndSetEmbed(embed, asset.data, false, files);
-                                    break;
-                                case 'update':
-                                case 'extract':
-                                case 'local':
-                                case 'get':
-                                    if (asset.format && asset.format == 'url') txt += `${asset.type}: ${asset.data}\n`;
-                                    break;
-                                case 'zip':
-                                    if (asset.url) txt += `${asset.type}: ${asset.url}\n`;
-                                    break;
-                            }
-                        }
-                    }
-                    embed.addField('Assets', txt || "Fetch SD-ready zip from latest Github release");
-                }
-                client.guilds.get(config.discord.packageVerification.guild).channels.get(config.discord.packageVerification.channel).send({embed, files}).then(msg => {
-                    //pendingPackages.push({id: msg.id, content: reqFormat});
+                verifChannel.send(embed).then(msg => {
                     submission.setDiscord(msg.id);
                     dtb.pushPendingPackage(submission);
                     msg.react('✅');
                     msg.react('❎');
                 });
-                console.log(`[Approval] Submission received ${reqFormat.package}`);
+
+                console.log(`[Approval] Submission received ${submission.pkg.package}`);
                 res.status(200).end();
             } catch (e) {
                 console.log("error with submission");
@@ -216,10 +158,10 @@ async function sleep(ms)
 const ReactionHandler = class ReactionHandler {
     static async handleReaction(reaction, user) {
         const id = reaction.message.id;
-        if (reaction.users.size == 2) {
+        if (reaction.me) {
             const submission = dtb.getPendingPackageByDiscordID(id);
             if (submission !== undefined) {
-                console.log(reaction);
+                //console.log(reaction);
 
                 if (reaction.emoji.name == '✅') {
                     let frontendUrl = config.discord.frontendUrl;
@@ -236,12 +178,6 @@ const ReactionHandler = class ReactionHandler {
                     if (reaction.message.embeds.length > 0 &&
                         reaction.message.embeds[0].thumbnail) {
                         embed.setThumbnail(reaction.message.embeds[0].thumbnail.url);
-                    }
-
-                    try {
-                        await submission.getGitHubRelease();
-                    } catch(e) {
-                        reaction.message.channel.send(e.toString());
                     }
 
                     try {
@@ -287,7 +223,7 @@ const ReactionHandler = class ReactionHandler {
                 } else if (reaction.emoji.name == '❎') {
                     reaction.message.delete();
                     reaction.message.channel.send({embed: new RichEmbed({
-                        title: submission.pkg.content.package,
+                        title: submission.pkg.package,
                         color: 0xC73228,
                         footer: {text: 'Package submission denied'},
                         url: submission.pkg.info.url,

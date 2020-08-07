@@ -58,7 +58,10 @@ async getGitHubRelease() {
         if (binRelease !== null && binRelease !== undefined) {
             this.pkg.assets.push({
                 type: 'update',
+                format: 'url',
+                //TODO spec usage seems a touch inconsistent
                 url: binRelease,
+                data: binRelease,
                 dest: `/${this.pkg.console}/${this.pkg.package}/${this.pkg.package}${ext}`
             });
             foundBinary = true;

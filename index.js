@@ -20,8 +20,18 @@ let endpointHandler = new Handlers.EndpointHandler(client, config.http.port);
 client.on('ready', function () {
     global.pendingPackages = [];
     console.log("[Discord] Logged in as " + client.user.tag + "!");
+
+    const verifChannel = client
+        .guilds.get(config.discord.packageVerification.guild)
+        .channels.get(config.discord.packageVerification.channel);
+    const submissions = dtb.getAllPendingPackages();
+    for (const submission of submissions) {
+        console.log(`[Discord] Caching message ${submission.discord_id} for pending submission ${submission.uuid}`);
+        verifChannel.fetchMessage(submission.discord_id);
+    }
+
     cron.schedule('1 * * * *', () => {
-      
+
       return;
     });
 });
