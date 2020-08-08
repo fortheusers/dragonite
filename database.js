@@ -9,7 +9,7 @@ const Database = class Database {
     constructor() {
         const adapter = new FileSync('db.json');
         this.db = low(adapter);
-        this.db.defaults({ packageOwnership: [], bans: [], meta: [], pendingPackages: [] })
+        this.db.defaults({ packageOwnership: [], bans: [], meta: [], pendingPackages: [], pendingPackagesQA: [] })
             .write();
         this.db.read();
         console.log(`✅ [Database] Lowdb database running with ${this.db.get('packageOwnership').size()} users, ${this.db.get('pendingPackages').size()} packages pending`);
@@ -28,6 +28,27 @@ const Database = class Database {
         }
     }
 
+    pushQAPendingPackage(submission) {
+        let existingEntry = this.db.get('pendingPackagesQA').find({uuid: submission.uuid}).value();
+        if (existingEntry === undefined) {
+            this.db.get('pendingPackagesQA').push({
+                uuid: submission.uuid,
+                discord_id: submission.discord_id,
+                pkg: submission.pkg
+            }).write();
+        } else {
+            throw new Error("Package already pending in database!");
+        }
+    }
+
+    getAllQAPendingPackages() {
+        const dbSubmissions = this.db.get('pendingPackagesQA').value();
+        const submissions = dbSubmissions.map(pkg =>
+            new Submission(pkg.pkg, pkg.uuid, pkg.discord_id)
+        );
+        return submissions;
+    }
+
     getAllPendingPackages() {
         const dbSubmissions = this.db.get('pendingPackages').value();
         const submissions = dbSubmissions.map(pkg =>
@@ -44,8 +65,22 @@ const Database = class Database {
         return new Submission(pkg.pkg, pkg.uuid, pkg.discord_id);
     }
 
+    getQAPendingPackageByUUID(uuid) {
+        const pkg = this.db.get('pendingPackagesQA').find({
+            uuid: uuid,
+        }).value();
+        if (pkg === undefined) return undefined;
+        return new Submission(pkg.pkg, pkg.uuid, pkg.discord_id);
+    }
+
     removePendingPackage(uuid) {
         this.db.get('pendingPackages').remove({
+            uuid: uuid,
+        }).write();
+    }
+
+    removeQAPendingPackage(uuid) {
+        this.db.get('pendingPackagesQA').remove({
             uuid: uuid,
         }).write();
     }

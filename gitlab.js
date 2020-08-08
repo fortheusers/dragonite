@@ -42,8 +42,15 @@ const GitlabHelper = class GitlabHelper {
             }
         });
         commitFiles[0].content = JSON.stringify(commitJson, null, 1);
-        
+
         return this.api.Commits.create(config.gitlab.projectIDs[subpackage.console], "master", `${subpackage.type}: ${subpackage.package} (${subpackage.info.version})`, commitFiles, {author_email: "dragonite@fortheusers.org", author_name: "Dragonite Bot"});
+    }
+
+    commitReview(review) {
+        let commitFiles = [{action: 'create', filePath: '/_data/reviews/' + review.uuid + '.json', content: ''}];
+        commitFiles[0].content = JSON.stringify(review, null, 1);
+
+        return this.api.Commits.create(config.gitlab.qaID, "master", `[QA] ${review.accept} ${review.package.info.title}`, commitFiles, {author_email: "dragonite@fortheusers.org", author_name: "Dragonite Bot"});
     }
 
     async checkPipeline(repo) {

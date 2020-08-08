@@ -1,6 +1,7 @@
 var config = require("./config.js");
 const commands = require('./commands');
 const express = require('express');
+const bodyParser = require('body-parser');
 const cors = require('cors');
 const {discord, RichEmbed} = require('discord.js');
 const discordutils = require('./discordutils')
@@ -47,6 +48,7 @@ const EndpointHandler = class EndpointHandler{
         this.app = express();
         this.app.use(cors());
         this.app.use(express.json({limit: '15mb'}));
+        this.app.use(bodyParser.urlencoded({ extended: false }));
 
         this.port = port;
         this.app.use('/img/hey.gif', express.static('hey.gif'));
@@ -54,7 +56,7 @@ const EndpointHandler = class EndpointHandler{
           res.writeHead(302, {'Location': '/img/hey.gif'});
           res.end();
         });
-        this.app.use(express.json());
+//        this.app.use(express.json());
 
         this.app.put('/mmcourse/:uuid/:package', (req, res) => {
             if(!/^\d+$/.test(req.params.uuid)) { // Checks if uuid contains non-number
@@ -131,13 +133,13 @@ const EndpointHandler = class EndpointHandler{
                 let embed = discordutils.makeSubmissionEmbed(submission, ip);
 
                 verifChannel.send(embed).then(msg => {
-                    submission.setDiscord(msg.id);
-                    dtb.pushPendingPackage(submission);
-                    msg.react('✅');
-                    msg.react('❎');
+                    //submission.setDiscord(msg.id);
+                    dtb.pushQAPendingPackage(submission);
+                    //msg.react('✅');
+                    //msg.react('❎');
                 });
 
-                console.log(`[Approval] Submission received ${submission.pkg.package}`);
+                console.log(`[Approval] Submission received ${submission.pkg.package} - to QA`);
                 res.status(200).end();
             } catch (e) {
                 console.log("error with submission");
@@ -148,10 +150,35 @@ const EndpointHandler = class EndpointHandler{
         });
 
         this.app.get('/qa/packages', (req, res) => {
-            const submissions = dtb.getAllPendingPackages();
+            const submissions = dtb.getAllQAPendingPackages();
             res.status(200);
             res.json(submissions);
             res.end();
+        });
+
+        this.app.post('/qa/submit', (req, res) => {
+            const submission = dtb.getQAPendingPackageByUUID(req.body.uuid);
+            if (submission === undefined) {
+                res.status(404).end();
+            }
+            var review = req.body;
+            review.package = submission.pkg;
+            res.status(200).end();
+            global.gitlabHelper.commitReview(review);
+            if (review.accept === 'accept') {
+                const repoChannel = client
+                    .guilds.get(config.discord.repoMaintenance.guild)
+                    .channels.get(config.discord.repoMaintenance.channel);
+
+                let embed = discordutils.makeQAPassEmbed(submission);
+                repoChannel.send(embed).then(msg => {
+                    submission.setDiscord(msg.id);
+                    dtb.pushPendingPackage(submission);
+                    dtb.removeQAPendingPackage(submission.uuid);
+                    msg.react('✅');
+                    msg.react('❎');
+                });
+            }
         });
 
         this.app.listen(this.port, () => console.log(`✅ [Submissions] Endpoint HTTP handler listening on port ${this.port}!`));
@@ -193,9 +220,9 @@ const ReactionHandler = class ReactionHandler {
                       embed.addField("Commit", `https://gitlab.com/4tu/dragonite-test-repo/commit/${resp}`, true);
                       const status_msg = reaction.message.channel.send({ embed });
 
-                      /*while (!await global.gitlabHelper.checkPipeline(submission.pkg.console)) {
+                      while (!await global.gitlabHelper.checkPipeline(submission.pkg.console)) {
                           await sleep(3000);
-                      }*/
+                      }
 
                       embed.setColor(0x85A352);
                       embed.setFooter('Package submission approved');
