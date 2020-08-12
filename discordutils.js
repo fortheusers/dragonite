@@ -44,7 +44,7 @@ const discordutils = class discordutils {
             let val = undefined;
             try {
                 //this is, in fact, not the worst thing I've ever done - Ash
-                val = eval('submission.pkg.' + field.val).replace('\\n', '\n');
+                val = eval('submission.pkg.' + field.val).replace(/\\n/g, '\n');
             } catch (e) {
                 continue;
             }
@@ -117,7 +117,7 @@ const discordutils = class discordutils {
             let val = undefined;
             try {
                 //this is, in fact, not the worst thing I've ever done - Ash
-                val = eval('submission.pkg.' + field.val).replace('\\n', '\n');
+                val = eval('submission.pkg.' + field.val).replace(/\\n/g, '\n');
             } catch (e) {
                 continue;
             }
