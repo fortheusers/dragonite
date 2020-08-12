@@ -30,7 +30,7 @@ const discordutils = class discordutils {
             {title: "License", val: "info.license", inl: true},
             {title: "Console", val: "console", inl: true},
             {title: "Contact", val: "submitter", inl: true},
-            {title: "Details", val: "info.details", inl: true},
+            {title: "Details", val: "info.details", inl: false},
         ];
 
         const geoness = geoip.lookup(ip);
@@ -44,7 +44,7 @@ const discordutils = class discordutils {
             let val = undefined;
             try {
                 //this is, in fact, not the worst thing I've ever done - Ash
-                val = eval('submission.pkg.' + field.val);
+                val = eval('submission.pkg.' + field.val).replace('\\n', '\n');
             } catch (e) {
                 continue;
             }
