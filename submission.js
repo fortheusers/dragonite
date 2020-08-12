@@ -38,13 +38,7 @@ async getGitHubRelease() {
     if (hasGoodAsset) return;
 
     var gh = new GithubHelper();
-    try {
-        var releases = await gh.getReleases(this.pkg.info.url, '.zip');
-    } catch (e) {
-        //bad url, private repo, etc.
-        //TODO possibly log to discord here
-        return;
-    }
+    var releases = await gh.getReleases(this.pkg.info.url, '.zip');
     if (releases === undefined) {
         //no releases
         return;

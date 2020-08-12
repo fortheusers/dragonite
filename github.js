@@ -56,15 +56,13 @@ const GithubHelper = class GithubHelper {
         const parsedUrl = new URL(url);
         if (parsedUrl.host !== "github.com") {
             console.warn("URL for repository is not a GitHub URL");
-            throw new Error("URL for repository is not a GitHub URL");
             return;
         }
         const pathSegments = parsedUrl.pathname.split('/');
-        const user = parsedUrl[1];
-        const repo = parsedUrl[2];
+        const user = pathSegments[1];
+        const repo = pathSegments[2];
         if (user == "" || repo == "") {
             console.warn("GitHub URL for repository seems malformed");
-            throw new Error("GitHub URL for repository seems malformed");
             return;
         }
         const latestReleases = await this.octokit.repos.listReleases({owner: user, repo: repo});
