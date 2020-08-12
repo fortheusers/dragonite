@@ -6,7 +6,7 @@ const GithubHelper = class GithubHelper {
     constructor() {
         this.octokit = new Octokit(config.github.initOptions);
     }
-    
+
     async githubCheck(url, repoVersion, name) {
         if (!url.includes('//github.com/')) throw {status: 200, url: url};
         let parsedUrl = new URL(url).pathname;
@@ -53,12 +53,26 @@ const GithubHelper = class GithubHelper {
     }
 
     async getReleases(url, extension = null) {
-        let parsedUrl = new URL(url).pathname;
-        parsedUrl = parsedUrl.split('/');
+        const parsedUrl = new URL(url);
+        if (parsedUrl.host !== "github.com") {
+            console.warn("URL for repository is not a GitHub URL");
+            throw new Error("URL for repository is not a GitHub URL");
+            return;
+        }
+        const pathSegments = parsedUrl.pathname.split('/');
         const user = parsedUrl[1];
         const repo = parsedUrl[2];
+        if (user == "" || repo == "") {
+            console.warn("GitHub URL for repository seems malformed");
+            throw new Error("GitHub URL for repository seems malformed");
+            return;
+        }
         const latestReleases = await this.octokit.repos.listReleases({owner: user, repo: repo});
-        if (latestReleases.status != 200) throw {status: latestReleases.status, url: url};
+        if (latestReleases.status != 200) {
+            console.warn(`GitHub returned error ${latestRelease.status} for ${user}/${repo}`);
+            throw new Error(`GitHub returned error ${latestRelease.status} for ${user}/${repo}`);
+            return;
+        }
         const latestRelease = latestReleases.data[0];
         if (latestRelease === undefined || latestRelease.length == 0) {
             console.warn(`Repo ${repo} found to have no releases`);

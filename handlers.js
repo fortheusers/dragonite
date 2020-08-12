@@ -4,7 +4,8 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const {discord, RichEmbed} = require('discord.js');
-const discordutils = require('./discordutils')
+const discordutils = require('./discordutils');
+const auth = require('http-auth');
 
 var AdmZip = require('adm-zip');
 const GithubHelper = require('./github');
@@ -40,7 +41,6 @@ const MessageHandler = class MessageHandler{
         this.client = client;
         this.gitlab = gitlab;
     }
-
 }
 
 const EndpointHandler = class EndpointHandler{
@@ -126,7 +126,8 @@ const EndpointHandler = class EndpointHandler{
             try {
                 await submission.getGitHubRelease();
             } catch(e) {
-                verifChannel.send(`Couldn't fetch GitHub assets for incoming package ${submission.pkg.package} - ${e.toString()}`);
+                console.warn(`Couldn't fetch GitHub assets for incoming package ${submission.pkg.package} - ${e.toString()}`);
+                verifChannel.send(`Couldn't fetch GitHub assets for incoming package ${submission.pkg.package} - ${e.toString()}`).then();
             }
 
             try {
@@ -149,14 +150,24 @@ const EndpointHandler = class EndpointHandler{
             }
         });
 
-        this.app.get('/qa/packages', (req, res) => {
+        const qaAuth = auth.basic({
+            realm: "Dragonite QA",
+            file: __dirname + "/qa.htpasswd"
+        });
+
+        const qaCORS = cors({
+            origin: config.discord.qaUrl,
+            credentials: true,
+        });
+
+        this.app.get('/qa/packages', qaCORS, qaAuth.check((req, res) => {
             const submissions = dtb.getAllQAPendingPackages();
             res.status(200);
             res.json(submissions);
             res.end();
-        });
+        }));
 
-        this.app.post('/qa/submit', (req, res) => {
+        this.app.post('/qa/submit', qaCORS, qaAuth.check((req, res) => {
             const submission = dtb.getQAPendingPackageByUUID(req.body.uuid);
             if (submission === undefined) {
                 res.status(404).end();
@@ -179,7 +190,7 @@ const EndpointHandler = class EndpointHandler{
                     msg.react('❎');
                 });
             }
-        });
+        }));
 
         this.app.listen(this.port, () => console.log(`✅ [Submissions] Endpoint HTTP handler listening on port ${this.port}!`));
     }
@@ -216,8 +227,8 @@ const ReactionHandler = class ReactionHandler {
                     }
 
                     try {
-                      const resp = (await global.gitlabHelper.commitPackage(submission.pkg)).id;
-                      embed.addField("Commit", `https://gitlab.com/4tu/dragonite-test-repo/commit/${resp}`, true);
+                      const resp = await global.gitlabHelper.commitPackage(submission.pkg);
+                      embed.addField("Commit", resp.web_url, true);
                       const status_msg = reaction.message.channel.send({ embed });
 
                       while (!await global.gitlabHelper.checkPipeline(submission.pkg.console)) {
@@ -256,7 +267,7 @@ const ReactionHandler = class ReactionHandler {
                     }
 
                 } else if (reaction.emoji.name == '❎') {
-                    reaction.message.delete();
+                    //reaction.message.delete();
                     reaction.message.channel.send({embed: new RichEmbed({
                         title: submission.pkg.package,
                         color: 0xC73228,

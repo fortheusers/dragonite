@@ -14,7 +14,8 @@
     "node-cron": "^2.0.3",
     "prompt": "^1.0.0",
     "ssh2": "^0.8.4",
-    "uuid": "^8.3.0"
+    "uuid": "^8.3.0",
+    "http-auth": "^4.1.2"
   },
   "name": "dragonite",
   "description": "A discord bot for reacting to messages containing certain text in certain channels, and then prompting certain users whether or not they want to repost those messages to other channels.",

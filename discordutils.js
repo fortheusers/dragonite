@@ -1,6 +1,7 @@
 const {discord, RichEmbed} = require('discord.js');
 const geoip  = require('geoip-lite');
 const fs = require('fs');
+var config = require("./config.js");
 
 const convertb64AndSetEmbed = (embed, data, val, files) => {
     let base64Image = data.split(';base64,').pop();
@@ -84,6 +85,10 @@ const discordutils = class discordutils {
             }
             embed.addField('Assets', txt || "No assets found");
         }
+
+        let qaURL = new URL(config.discord.qaUrl);
+        qaURL.search = `?${submission.uuid}`;
+        embed.addField("QA URL", qaURL.href);
 
         return {embed, files};
     } //makeSubmissionEmbed

@@ -22,10 +22,10 @@ async getGitHubRelease() {
         "switch": [".nro"],
         "wiiu": [".rpx", ".elf"],
     };
-    const consoleExtensions = extensions[this.pkg.console];
+    let consoleExtensions = extensions[this.pkg.console];
     if (consoleExtensions === undefined) {
-        console.warn(`[Approval] WARNING: Unsupported console on package \
-                      ${this.pkg.package} - "${this.pkg.console}"?`)
+        console.warn("[Approval] WARNING: Unsupported console on package" +
+                     `${this.pkg.package} - "${this.pkg.console}"?`);
         consoleExtensions = [".elf"];
     }
 
@@ -38,7 +38,17 @@ async getGitHubRelease() {
     if (hasGoodAsset) return;
 
     var gh = new GithubHelper();
-    var releases = await gh.getReleases(this.pkg.info.url, '.zip');
+    try {
+        var releases = await gh.getReleases(this.pkg.info.url, '.zip');
+    } catch (e) {
+        //bad url, private repo, etc.
+        //TODO possibly log to discord here
+        return;
+    }
+    if (releases === undefined) {
+        //no releases
+        return;
+    }
 
     let release = releases.find(release =>
         release.name.includes(this.pkg.console)
