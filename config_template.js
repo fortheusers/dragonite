@@ -7,15 +7,17 @@ const config = {
 
     // All verification messages get sent here
     packageVerification: {channel: '', guild: ''},
+    repoMaintenance: {channel: '', guild: ''},
     logging: {channel: '', guild: ''},
     publicReleases: {channel: '', guild: ''},
-    frontendUrl: 'http://example.com/%package%'
+    frontendUrl: 'http://example.com/%package%',
+    qaUrl: 'http://qa.example.com'
   },
 
   libget: {
     // list of get repo url's to check via the bot
     repos: ['', ''],
-      
+
     // Max attempts at requesting something before giving up
     toleranceMax: 3
   },
