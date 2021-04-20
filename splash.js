@@ -36,6 +36,11 @@ const showSplash = () => {
   else
       console.log("❌ [Approvals] Missing publicReleases channel in config")
 
+  if (fs.existsSync(__dirname + "/qa.htpasswd"))
+      console.log("✅ [Approvals] qa.htpasswd file present")
+  else
+      console.log("❌ [Approvals] Missing qa.htpasswd file")
+
   // Check SSH
   if (config.ssh.user && config.ssh.server)
       console.log("✅ [Management] Remote details present, ready to connect to SSH server")
