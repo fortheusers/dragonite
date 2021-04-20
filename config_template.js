@@ -11,7 +11,9 @@ const config = {
     logging: {channel: '', guild: ''},
     publicReleases: {channel: '', guild: ''},
     frontendUrl: 'http://example.com/%package%',
-    qaUrl: 'http://qa.example.com'
+    qaUrl: 'http://qa.example.com',
+    maxHTTPErrorRetries: 4,
+    errorRetriesWait: 30000
   },
 
   libget: {

@@ -14,10 +14,16 @@ splash.showSplash();
 global.gitlabHelper = new GitlabHelper();
 global.dtb = new Database();
 var msgHandler = new Handlers.MessageHandler(client, gitlabHelper);
-let endpointHandler = new Handlers.EndpointHandler(client, config.http.port);
+let endpointHandler;
+try {
+    endpointHandler = new Handlers.EndpointHandler(client, config.http.port);
+}catch (e) {}
+
+let retry = 0;
 
 // Connect to Discord
 client.on('ready', function () {
+    retry = 0;
     global.pendingPackages = [];
     console.log("[Discord] Logged in as " + client.user.tag + "!");
 
@@ -35,6 +41,21 @@ client.on('ready', function () {
       return;
     });
 });
+client.on('error', function (err) {
+    console.error(`Discord Error '${err.name}': '${err.message}'`)
+    if (err instanceof Discord.HTTPError) {
+        if (retry >= config.discord.maxHTTPErrorRetries) {
+            console.error("Previous error exceeded maximum retries! Quitting with error status.");
+            process.exit(1);
+        }else {
+            // wait a while before we actually do anything
+            setTimeout(function() {
+                client.login(config.discord.token);
+                retry++;
+            }, config.discord.errorRetriesWait);
+        }
+    }
+})
 
 client.on('message', msgHandler.handleCommand);
 client.on('messageReactionAdd', Handlers.ReactionHandler.handleReaction);
