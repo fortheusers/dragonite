@@ -125,6 +125,8 @@ const commands = {
                 });
             });
 
+            let updatesFound = false;
+
             for (let repo of config.libget.repos) {
 		if (targetedRepo && repo.indexOf(targetedRepo) == -1) {
 			// we had a targeted repo, and this one doesn't match, sos kip
@@ -167,6 +169,7 @@ const commands = {
                                         url: gCheck.url
                                     });
                                     msg.channel.send(outOfDate);
+                                    updatesFound = true;
                                     toleranceCount = 0;
                                 }, e => {
                                     if (e.status != 200 && !giveup) {
@@ -185,6 +188,44 @@ const commands = {
                     response.on('error', e => {
                         msg.reply(`Error occured while getting repo json, ${e.name}: ${e.message}`);
                     });
+                });
+            }
+
+            // Fetch a random GIF from Giphy API
+            function getRandomGifFromAPI(callback) {
+                const apiKey = 'YOUR_GIPHY_API_KEY';
+                const url = `https://api.giphy.com/v1/gifs/random?api_key=${apiKey}&tag=no%20updates&rating=g`;
+
+                https.get(url, (res) => {
+                    let data = '';
+                    res.on('data', chunk => {
+                        data += chunk;
+                    });
+                    res.on('end', () => {
+                        try {
+                            const jsonData = JSON.parse(data);
+                            const gifUrl = jsonData.data.images.original.url;
+                            callback(gifUrl); // Pass the GIF URL to the callback
+                        } catch (e) {
+                            console.error('Error fetching GIF from Giphy API:', e);
+                            callback(null);
+                        }
+                    });
+                });
+            }
+
+            // After all repos are checked, fetch and send a random GIF if no updates were found
+            if (!updatesFound) {
+                getRandomGifFromAPI((gifUrl) => {
+                    if (gifUrl) {
+                        const embed = new RichEmbed()
+                            .setColor(0x00FF00)
+                            .setTitle("No Updates Found!")
+                            .setImage(gifUrl); // Attach the random GIF from Giphy
+                        msg.channel.send(embed);
+                    } else {
+                        msg.channel.send("No updates found, but I couldn't fetch a GIF this time.");
+                    }
                 });
             }
         }
