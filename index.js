@@ -7,7 +7,17 @@ const SSHRemote = require('./ssh.js');
 const splash = require('./splash.js');
 const Database = require('./database.js');
 
-var client = new Discord.Client();
+// var client = new Discord.Client();
+
+const client = new Discord.Client({
+  intents: [
+    // Discord.GatewayIntentBits.DirectMessages,
+    // Discord.GatewayIntentBits.Guilds,
+    // Discord.GatewayIntentBits.GuildBans,
+    // Discord.GatewayIntentBits.GuildMessages,
+    "MessageContent",
+  ],
+});
 
 splash.showSplash();
 

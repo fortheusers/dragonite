@@ -4,6 +4,7 @@ const SSHRemote = require('./ssh');
 const { discord, RichEmbed } = require('discord.js');
 const http = require("https");
 
+
 const commands = {
     'nrefresh': {
         requiredPermissions: ['BAN_MEMBERS'],
@@ -30,7 +31,6 @@ const commands = {
                 path: '/appstore/repogen.py',
                 method: 'GET'
             };
-
             msg.channel.send(`Refreshing ${url}...`);
 
             http.request(options, function(res) {
@@ -86,7 +86,50 @@ const commands = {
         action: async function(msg, command) {
             let toleranceCount = 0;
             let github = new GithubHelper();
+            let IGNORE_URL = "https://wiiubru.com/appstore/ignore.json";
+	    let IGNORE_TIME_URL = "https://wiiubru.com/appstore/ignore_by_time.json";
+
+	    let targetedRepo = null;
+	    if (command.length > 1) {
+		    // we were given an argument, apply it as the targeted repo
+		    targetedRepo = command.pop();
+	    }
+
+            // pull in the ignore json data into an object
+            let ignoreData = {};
+            await new Promise((resolv1, reject2) => {
+                http.get(IGNORE_URL, response => {
+                    let body = "";
+                    response.on('data', chunk => {
+                        body += chunk;
+                    });
+                    response.on('end', function(){
+                        try {
+                            ignoreData = JSON.parse(body);
+                            resolv1();
+                        } catch (e) {
+                            msg.channel.send(new RichEmbed({
+                                color: 0xC73228,
+                                title: e.name + ' while parsing ignore JSON',
+                                description: e.message,
+                                footer: {text: `URL: ${IGNORE_URL}`}
+                            }));
+                            reject2(e);
+                            return;
+                        }
+                    });
+                    response.on('error', e => {
+                        msg.reply(`Error occured while getting ignore list data at: ${IGNORE_URL}`);
+                        reject2(e);
+                    });
+                });
+            });
+
             for (let repo of config.libget.repos) {
+		if (targetedRepo && repo.indexOf(targetedRepo) == -1) {
+			// we had a targeted repo, and this one doesn't match, sos kip
+			continue;
+		}
                 msg.channel.send(`Checking repo: <${repo}>`);
                 http.get(repo + 'repo.json', response => {
                     let body = "";
@@ -109,11 +152,17 @@ const commands = {
                         }
                         for (let package of packages) {
                             if(!giveup) {
-                                github.githubCheck(package.url, package.version.toLowerCase().replace(/^v/, ''), package.name).then(gCheck =>{
+                                let pkgVersion = package.version.toLowerCase().replace(/^v/, '');
+                                github.githubCheck(package.url, pkgVersion, package.name).then(gCheck =>{
+                                    let gVersion = gCheck.version.toLowerCase().replace(/^v/, '');
+                                    // skip if the version is in our ignore data and the package matches
+                                    if (ignoreData[package.name] && ignoreData[package.name] == gVersion) {
+                                        return;
+                                    }
                                     const outOfDate = new RichEmbed({
                                         color: 0xFF9900,
                                         title: `${package.name} may be out of date`,
-                                        description: `Ours is: \`${package.version}\`\nGithub's is:\`${gCheck.version}\`\n[Release Link](${gCheck.url})`,
+                                        description: `Ours is: \`${package.version}\`\nGithub's is:\`${gVersion}\`\n[Release Link](${gCheck.url})`,
                                         footer: {text: repo},
                                         url: gCheck.url
                                     });
@@ -151,3 +200,5 @@ const commands = {
 }
 
 module.exports = commands;
+
+

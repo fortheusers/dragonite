@@ -57,6 +57,9 @@ const EndpointHandler = class EndpointHandler{
           res.end();
         });
 //        this.app.use(express.json());
+	this.app.get('/updates', (req, res) => {
+		manualUpdatesCheck();
+	});
 
         this.app.put('/mmcourse/:uuid/:package', (req, res) => {
             if(!/^\d+$/.test(req.params.uuid)) { // Checks if uuid contains non-number
